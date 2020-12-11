@@ -62,7 +62,7 @@ def plot_html(new_centroids,new_sv,ind):
 	fig = go.Figure(data=data, layout=layout)
 	
 	#-- save to file
-	fig.write_html(os.path.join(os.getcwd(),'spherical_voronoi_regions.html'))
+	fig.write_html(os.path.join(os.getcwd(),'imgs','spherical_voronoi_regions.html'))
 
 
 #------------------------------------------------------------------------------
