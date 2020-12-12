@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""u
+u"""
 create_voronoi_regions.py
 by Yara Mohajerani
 

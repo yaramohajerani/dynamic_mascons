@@ -1,0 +1,11 @@
+VORONOI_FILE	~/dynamic_mascons/data/sv_obj
+DDEG_RASTER	0.25
+DDEG_OUT	0.5
+LMAX	60
+MMAX	60
+LMIN	0
+LOVE_FILE	~/read-GRACE-harmonics/gravity_toolkit/data/love_numbers
+OUT_DIRECTORY	~/dynamic_mascons/data/test_dir
+EPSILON	0.5
+MAKE_HARMONICS	Y
+MAKE_SPATIAL	Y
