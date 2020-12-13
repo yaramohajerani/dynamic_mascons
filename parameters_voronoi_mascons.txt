@@ -1,4 +1,5 @@
 VORONOI_FILE	~/dynamic_mascons/data/sv_obj
+COORD_FILE	~/dynamic_mascons/data/fixed_points_sample.csv 
 DDEG_RASTER	0.25
 DDEG_OUT	0.5
 LMAX	60
@@ -9,3 +10,12 @@ OUT_DIRECTORY	~/dynamic_mascons/data/test_dir
 EPSILON	0.5
 MAKE_HARMONICS	Y
 MAKE_SPATIAL	Y
+RAD	250
+DATAFORM	netCDF4
+FIT_METHOD	1
+MASCON_OCEAN	Y
+DDEG	0.5,0.5
+INTERVAL	1
+LANDMASK	~/data.dir/coasts.dir/landsea_hd.nc
+MASCON_INDEX	~/dynamic_mascons/data/test_dir/mascon_Ylms_index_L60_0.25deg.txt
+MSCN_DIRECTORY	~/dynamic_mascons/data/MSCNS.dir
