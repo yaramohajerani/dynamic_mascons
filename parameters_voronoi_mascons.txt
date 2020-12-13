@@ -19,3 +19,21 @@ INTERVAL	1
 LANDMASK	~/data.dir/coasts.dir/landsea_hd.nc
 MASCON_INDEX	~/dynamic_mascons/data/test_dir/mascon_Ylms_index_L60_0.25deg.txt
 MSCN_DIRECTORY	~/dynamic_mascons/data/MSCNS.dir
+PROC	JPL
+DREL		RL06	
+DSET		GSM	
+START	4
+END	224
+MISSING		6,7,18,109,114,125,130,135,140,141,146,151,156,162,166,167,172,177,178,182,187,188,189,190,191,192,193,194,195,196,197,200,201	
+DEG1		Tellus	
+SLR_C20		GSFC	
+SLR_C30		GSFC	
+ATM		N	
+POLE_TIDE		N	
+GIA		AW13-ICE6G	
+GIA_FILE	os.path.expanduser(	~/data.dir/gia.dir/geruo.dir/ice6g.dir/stokes.ice6g_GA.txt	)
+REMOVE_INDEX		None	
+REDISTRIBUTE_REMOVED		N	
+RECONSTRUCT		N	
+DESTRIPE		Y	
+MEAN_FILE		None	

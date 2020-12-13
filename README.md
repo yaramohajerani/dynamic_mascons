@@ -7,25 +7,93 @@ Dynamic Mascons
 
 ### By Yara Mohajerani
 
-## Summary 
+# Summary 
 
 This respository showcases global dynamic mascon configurations that are regionally optimizied through a series of designed fixed-points and an iterative re-tessellation scheme based on polygon centroids. 
 
 In the first notebook, `spherical_voronoi.ipynb`, I go through the steps of constructing a spherical voronoi tessellation with a set of fixed points. I choose two points on the Karakoram region in High Mountain Asia as our fixed points. 
 [![nbviewer](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](https://nbviewer.jupyter.org/github/yaramohajerani/dynamic_mascons/blob/main/spherical_voronoi.ipynb)
 
-In the second notebook, the resulting final configuration is used to construct a harmonic mascon representation, which is then used to calculate the sensitivity kernel of the mascons resulting from the inversion (refer to [Jacob et al. 2011](http://doi.org/10.1007/s00190-011-0522-7)). The resulting kernel for the fixed points is localized and minimal leakage. This is in contrast to many configurations with regional coverage that are prone to divergence of the kernel at the boundaries of the domain, which illustrates the effectiveness of this method. Finally, we fit the spherical harmonic data from GRACE and GRACE FOllow-On satellites to these mascons to isolate the mass-balance sampled by the fixed points on the Karakorm.
+In the second notebook, the resulting final configuration is used to construct a harmonic mascon representation, which is then used to calculate the sensitivity kernel of the mascons resulting from the inversion (refer to [Jacob et al. 2011](http://doi.org/10.1007/s00190-011-0522-7)). The resulting kernel for the fixed points is localized and minimal leakage. This is in contrast to many configurations with regional coverage that are prone to divergence of the kernel at the boundaries of the domain, which illustrates the effectiveness of this method. While spherical caps have traditionally been used to create regional mascons (e.g. [Mohajerani et al. 2019](https://doi.org/10.1029/2019GL084665)) in order to minimze sharp edges that would rely on higher-degree harmonics, we find that directly using the voronoi polygons does not produce unacceptable leakage or noise, but instead allows us to create more flexible non-uniform global configurations. Finally, we fit the spherical harmonic data from GRACE and GRACE FOllow-On satellites to these mascons to isolate the mass-balance sampled by the fixed points on the Karakorm.
 [![nbviewer](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](https://nbviewer.jupyter.org/github/yaramohajerani/dynamic_mascons/blob/main/voronoi_to_mascon.ipynb)
 
-## More Background
+# Pipeline Steps
+The pipeline for running this procedure for any user-defined points from commandline is described below:
+
+1. Get required modules:
+   * Clone the dependency repositories (assuming base directory. But can change as desired):
+    ```
+    git clone https://github.com/tsutterley/read-GRACE-harmonics.git
+
+    git clone https://github.com/tsutterley/read-GRACE-geocenter.git
+    ```
+   * Download `pygplates`: https://www.gplates.org/download.html
+     * current version at the time of writing this repository is `pygplates_rev28_python37_MacOS64`, which has been downloaded to the root directory.  
+2. Create the set of desired points in a `.csv` file, around which the global mascon configuration is created. E.g. the points used as the example in this repository for the Karakoram are:
+
+    |LONS    | LATS    |
+    |:------:|:-------:|
+    |73.57999|36.29493 |
+    |76.38069|34.81469 |
+    * **It's important to keep the resolution of GRACE in mind when selecting these points. It won't be a problem if you just want to select a single coordinate and construct the mascons around it. But if specifying a few points that are strategically located on isolated geophysics signals, keep in mind that GRACE & GRACE-FO have a harmonic resolution of degree and order 60 or a spatial resolution of ~300km. It is possible to have smaller mascons, but you still have to add them together to respect the resolution of the satellites. The aim of this repository is not to downscale GRACE data, but to more strategically sample it with a user-defind non-uniform global mascon configuration for various regional analyses.**
+3. Create the mascon configuration using the an iterative spherical voronoi tessellation scheme:
+    ```
+	python create_voronoi_regions.py --epsilon=0.5 --iterations=50 --ratio=0.025
+	```
+	where `epsilon` is the increment (in radians) used in the initial grid of generators used to create voronoi regions, `iterations` is the number of iterations, and `ratio` is the scaling factor for shifting centroids towards the fixed points in every iteration (inversely proportional to distance)
+
+	This script will save the final voronoi regions into file for later use, and also save an [interactive plot of the voronoi regions.](./imgs/spherical_voronoi_regions.html)
+	![](./imgs/voronoi_regions.png)
+4. Convert the spherical voronoi regions to mascon harmonics:
+    ```
+	python calc_voronoi_harmonics.py parameters_voronoi_mascons.txt
+	```
+
+	This script will save the harmonic and corresponding spatial representations of mascons created directly from the voronoi polygons. **As the mascons get further away from the region of interest, they become larger. We are not interested in sampling the mass change from these regions. However, having a global configuration allows us to minimize leakage and avoid any far-field signal intefere with our mass change retrieval. Furthermore, directly using the voronoi polygons as our mascons allows for a more flexible global configuration without gaps between the mascons, and the vertices of the polygons do not appear to result in significant noise or ringing of the harmonics as shown in step 5.**
+
+	Mascon corresponding to the first fixed point:
+	![Mascon corresponding to the first fixed point](./imgs/harmonics_0.png)
+
+    Sample far-field mascon with significantly larger size:
+	![Sample far-field mascon with significantly larger size](./imgs/harmonics_37.png)
+5. Create the corresponding sensitivity kernels
+
+   **Note**: this requires the `gravity_toolkits` module that we cloned earlier. So you maybe have to change the path accordingly if you did not clone it into your root directory.
+   ```
+   python ~/gravity_toolkits/scripts/calc_sensitivity_kernel.py --reference CF parameters_voronoi_mascons.txt
+   ```
+
+   This will save the harmonic and spatial representation of the sensivivity kernel of each mascon in the output directory specified in the parameter file. For a better understanding of the sensivity kernel, refer to [Jacob et al. 2011](http://doi.org/10.1007/s00190-011-0522-7).
+6. Sum up the sensitivity kernels for the fixed points and plot them:
+   ```
+   python combine_kernels.py parameters_voronoi_mascons.txt
+   ```
+   ![Kernel Sum](./imgs/kernel_sum.png)
+
+   We see that the kernel is confined to the region determined by the fixed points, with minimal ringing from the vertices of the polygons. **It is noteworthy to emphasize that this global regionally-optimizied configuration is rather localized with minimal leakage, whereas regional spherical cap configurations are prone to diverging at the boundaries and do not capture far-field signals that are not covered by any mascons, which can leak into the area of interest.**
+7. If the kernel from step 6 looks acceptable, we can fit the actual GRACE harmonics to the mascons:
+   1. Download and pre-process GRACE harmonics:
+
+      **Note** You need your [PO.DAAC Drive](https://podaac-tools.jpl.nasa.gov/drive/) credentials to download the GRACE data. Use your [NASA Earthdata](https://urs.earthdata.nasa.gov) credentials  to log in to PO.DAAC to get your username and password.
+      ```
+	  sh grace_data.sh
+	  ```
+	  The bash script will ask for your password and output directory to download the data and create date and index files.
+   2. Fit the harmonics to the mascons:
+	  ```
+	  python ~/gravity_toolkits/scripts/calc_mascon.py --reference CF --directory=~/data.dir/grace.dir parameters_voronoi_mascons.txt
+	  ```
+   3. Add time-series of the mascons corresponding to fixed points and output the total time-series and plot.
+      ```
+	  ``` 	
+
+# More Background
 
 Some of my past work has focused on the development of regionally-optimizied GRACE mascons. E.g.
 * [Optimizied Mascons for Totten glacier in Antarctica](https://doi.org/10.1029/2018GL078173)
 * [Optimzied Mascons for Getz and Amery basins in Antarctica](https://doi.org/10.1029/2019GL084665)
 
-However, there is a need for a more robust approach to create *global* mascon configurations that are dynamic and depend on the geophysical feature of the region of interest to focus on. In this repo we explore and develop the framework to create dynamic mascon configurations based an underlying desired density.
-
-This draws on some previous work based on an iterative Voronoi Tessallation approach that I developed for Antarctica:
+However, there is a need for a more robust approach to create *global* mascon configurations that are dynamic and depend on the geophysical feature of the region of interest to focus on. This draws on some previous work based on an iterative Voronoi Tessallation approach that I developed for Antarctica:
 
 ![](./imgs/sample_antarctica.gif)
 
