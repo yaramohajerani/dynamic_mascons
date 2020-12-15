@@ -29,11 +29,9 @@ In the second notebook, the resulting final configuration is used to construct a
 The command-line pipeline for running this procedure for any user-defined point(s) is described below:
 
 1. Get depedencies:
-   * Clone needed repositories by [Tyler Sutterley](https://github.com/tsutterley) (The steps below assume these are cloned in root directory, but can be modified as desired):
+   * Clone repository with needed modules by [Tyler Sutterley](https://github.com/tsutterley) (The steps below assume this is cloned in root directory, but can be modified as desired):
     ```
     git clone https://github.com/tsutterley/read-GRACE-harmonics.git
-
-    git clone https://github.com/tsutterley/read-GRACE-geocenter.git
     ```
    * Download `pygplates`: https://www.gplates.org/download.html
      * current version at the time of writing this repository is `pygplates_rev28_python37_MacOS64`, which has been downloaded to the root directory.  
@@ -66,9 +64,9 @@ The command-line pipeline for running this procedure for any user-defined point(
 	![Sample far-field mascon with significantly larger size](./imgs/harmonics_37.png)
 5. Create the corresponding sensitivity kernels
 
-   **Note**: this requires the `gravity_toolkits` module that we cloned earlier. So you maybe have to change the path accordingly if you did not clone it into your root directory.
+   **Note**: this requires the `read-GRACE-harmonics` repository that we cloned earlier. So you maybe have to change the path accordingly if you did not clone it into your root directory.
    ```
-   python ~/gravity_toolkits/scripts/calc_sensitivity_kernel.py --reference CF parameters_voronoi_mascons.txt
+   python ~/read-GRACE-harmonics/scripts/calc_sensitivity_kernel.py --reference CF parameters_voronoi_mascons.txt
    ```
 
    This will save the harmonic and spatial representation of the sensivivity kernel of each mascon in the output directory specified in the parameter file. For a better understanding of the sensivity kernel, refer to [Jacob et al. 2011](http://doi.org/10.1007/s00190-011-0522-7).
@@ -89,7 +87,7 @@ The command-line pipeline for running this procedure for any user-defined point(
 	  The bash script will ask for your password and output directory to download the data and create date and index files.
    2. Fit the harmonics to the mascons:
 	  ```
-	  python ~/gravity_toolkits/scripts/calc_mascon.py --reference CF --directory=~/data.dir/grace.dir parameters_voronoi_mascons.txt
+	  python ~/read-GRACE-harmonics/scripts/calc_mascon.py --reference CF --directory ~/data.dir/grace.dir parameters_voronoi_mascons.txt
 	  ```
    3. Add time-series of the mascons corresponding to fixed points and output the total time-series and plot.
       ```

@@ -31,7 +31,7 @@ SLR_C30		GSFC
 ATM		N	
 POLE_TIDE		N	
 GIA		AW13-ICE6G	
-GIA_FILE	os.path.expanduser(	~/data.dir/gia.dir/geruo.dir/ice6g.dir/stokes.ice6g_GA.txt	)
+GIA_FILE	~/data.dir/gia.dir/geruo.dir/ice6g.dir/stokes.ice6g_GA.txt
 REMOVE_INDEX		None	
 REDISTRIBUTE_REMOVED		N	
 RECONSTRUCT		N	

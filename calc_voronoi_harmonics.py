@@ -21,7 +21,6 @@ sys.path.append(os.path.expanduser('~/pygplates_rev28_python37_MacOS64'))
 import pygplates
 #-- also import gravity toolkit modules
 sys.path.append(os.path.expanduser('~/read-GRACE-harmonics'))
-sys.path.append(os.path.expanduser('~/read-GRACE-geocenter'))
 from gravity_toolkit.gen_stokes import gen_stokes
 from gravity_toolkit.ncdf_stokes import ncdf_stokes
 from gravity_toolkit.ncdf_write import ncdf_write
