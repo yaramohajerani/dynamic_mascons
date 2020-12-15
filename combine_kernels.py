@@ -75,12 +75,15 @@ def combine_kernels(parameters):
 		out_lbl += '{0:d}+'.format(i)
 	#-- remove last '+' from output label
 	out_lbl = out_lbl[:-1]
+	#-- get grid for saving combined sensitivity kernel
+	glat = kerns[ind[0]]['lat']
+	glon = kerns[ind[0]]['lon']
 
 	#----------------------------------------------------------------------
 	#-- write kernel sum to file
 	#----------------------------------------------------------------------
 	outfile = os.path.join(ddir,'MASCON_{0}_YLMS_{1:.2f}DEG_SKERNEL_OCN_L{2:02d}_r{3:d}km.nc'.format(out_lbl,DDEG_RASTER,LMAX,RAD))
-	ncdf_write(np.transpose(kern_sum),kerns[i]['lon'],kerns[i]['lat'],0,FILENAME=outfile,DATE=False,UNITS='unitless',LONGNAME='Sensitivity_Kernel')
+	ncdf_write(kern_sum,glon,glat,0,FILENAME=outfile,DATE=False,UNITS='unitless',LONGNAME='Sensitivity_Kernel')
 
 	#----------------------------------------------------------------------
 	#-- plot summed kernel
@@ -89,7 +92,7 @@ def combine_kernels(parameters):
 	world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
 	#-- plot summed kernel
 	fig, ax = plt.subplots(1,figsize = (10,6),dpi=100)
-	c = ax.contourf(kerns[i]['lon'],kerns[i]['lat'],kern_sum,cmap='bwr',levels=np.linspace(-1.5,1.5,16))
+	c = ax.contourf(glon,glat,kern_sum,cmap='bwr',levels=np.linspace(-1.5,1.5,16))
 	#-- use an axis divider for the colorbar
 	drx = make_axes_locatable(ax)
 	cax = drx.append_axes("right", size="5%", pad=0.1)
