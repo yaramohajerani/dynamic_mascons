@@ -9,22 +9,30 @@ Dynamic Mascons
 
 # Summary 
 
-This respository showcases global dynamic mascon configurations that are regionally optimizied through a series of designed fixed-points and an iterative re-tessellation scheme based on polygon centroids. 
+This respository showcases global dynamic mascon configurations that are regionally optimizied through a series of designed fixed-points and an iterative voronoi tessellation scheme based on polygon centroids on the surface of a unit sphere. 
+
+While past work has focused on regionally optimizied mascon processing (e.g. [Mohajerani et al. 2018](https://doi.org/10.1029/2018GL078173), [Mohajerani et al. 2019](https://doi.org/10.1029/2019GL084665)), there is a need for a more robust approach to create *global* mascon configurations that are dynamic and depend on the geophysical feature of the region of interest to focus on. The global configuration resolves the issue of far-field leakage for sources of mass change that would otherwise not be accounted for by the mascons, as well as potential divergence of the sensitivity kernel at the boundaries of the mascon defintion.
+
+This draws on previous work on regional 2-dimensional automated variable-size mascon design that I developed for Antarctica:
+
+<img src="./imgs/sample_antarctica.gif" width="300"/>
+
+However, extending this to a global framework requires a 3D geodetic grid with no distortion. The present pipeline addresses this gap and allows for any user-defined set up local points to be transformed to a global mascon configuration for processing of GRACE and GRACE Follow-On harmonic data.
 
 In the first notebook, `spherical_voronoi.ipynb`, I go through the steps of constructing a spherical voronoi tessellation with a set of fixed points. I choose two points on the Karakoram region in High Mountain Asia as our fixed points. 
 [![nbviewer](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](https://nbviewer.jupyter.org/github/yaramohajerani/dynamic_mascons/blob/main/spherical_voronoi.ipynb)
 
-In the second notebook, the resulting final configuration is used to construct a harmonic mascon representation, which is then used to calculate the sensitivity kernel of the mascons resulting from the inversion (refer to [Jacob et al. 2011](http://doi.org/10.1007/s00190-011-0522-7)). The resulting kernel for the fixed points is localized and minimal leakage. This is in contrast to many configurations with regional coverage that are prone to divergence of the kernel at the boundaries of the domain, which illustrates the effectiveness of this method. While spherical caps have traditionally been used to create regional mascons (e.g. [Mohajerani et al. 2019](https://doi.org/10.1029/2019GL084665)) in order to minimze sharp edges that would rely on higher-degree harmonics, we find that directly using the voronoi polygons does not produce unacceptable leakage or noise, but instead allows us to create more flexible non-uniform global configurations. Finally, we fit the spherical harmonic data from GRACE and GRACE FOllow-On satellites to these mascons to isolate the mass-balance sampled by the fixed points on the Karakorm.
+In the second notebook, the resulting final configuration is used to construct a harmonic mascon representation, which is then used to calculate the sensitivity kernel of the mascons resulting from the inversion (refer to [Jacob et al. 2011](http://doi.org/10.1007/s00190-011-0522-7)). The resulting kernel for the fixed points is localized and has minimal leakage. This is in contrast to many configurations with regional coverage that are prone to divergence of the kernel at the boundaries of the domain, which illustrates the effectiveness of this method. While spherical caps have traditionally been used to create regional mascons (e.g. [Mohajerani et al. 2019](https://doi.org/10.1029/2019GL084665)) in order to minimze sharp edges and vertices that would rely on higher-degree harmonics, we find that directly using the voronoi polygons does not produce unacceptable leakage or noise, but instead allows us to create more flexible non-uniform global configurations. Finally, we fit the spherical harmonic data from GRACE and GRACE Follow-On satellites to these mascons to isolate the mass-balance sampled by the fixed points on the Karakorm.
 [![nbviewer](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](https://nbviewer.jupyter.org/github/yaramohajerani/dynamic_mascons/blob/main/voronoi_to_mascon.ipynb)
 
 # Pipeline Steps
-The pipeline for running this procedure for any user-defined points from commandline is described below:
+The command-line pipeline for running this procedure for any user-defined point(s) is described below:
 
-1. Get required modules:
+1. Get depedencies:
    * Clone needed repositories by [Tyler Sutterley](https://github.com/tsutterley) (The steps below assume these are cloned in root directory, but can be modified as desired):
     ```
     git clone https://github.com/tsutterley/read-GRACE-harmonics.git
-	
+
     git clone https://github.com/tsutterley/read-GRACE-geocenter.git
     ```
    * Download `pygplates`: https://www.gplates.org/download.html
@@ -90,19 +98,6 @@ The pipeline for running this procedure for any user-defined points from command
 	  This will save a time-series of the sum of the mass balance of all the mascons corresponding to the fixed points, with a corresponding mass balance time-series.
 	  ![timeseries](./imgs/timeseries.png)
 
-# More Background
-
-Some of my past work has focused on the development of regionally-optimizied GRACE mascons. E.g.
-* [Optimizied Mascons for Totten glacier in Antarctica](https://doi.org/10.1029/2018GL078173)
-* [Optimzied Mascons for Getz and Amery basins in Antarctica](https://doi.org/10.1029/2019GL084665)
-
-However, there is a need for a more robust approach to create *global* mascon configurations that are dynamic and depend on the geophysical feature of the region of interest to focus on. This draws on some previous work based on an iterative Voronoi Tessallation approach that I developed for Antarctica:
-
-![](./imgs/sample_antarctica.gif)
-
-However, the extension this to a global definition requires a 3D geodetic grid with no distortion.
-
-Some useful resources:
-* [Hexagonal CNN](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8853238)
-* [HexASCII](https://onlinelibrary.wiley.com/doi/epdf/10.1111/tgis.12304)
-* [SciPy spherical voronoi module](https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.SphericalVoronoi.html)
+# License
+The code presented in this repository is under the [MIT license](./LICENSE).
+Copyright &copy; 2020 Yara Mohajerani
