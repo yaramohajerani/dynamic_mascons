@@ -85,7 +85,10 @@ The pipeline for running this procedure for any user-defined points from command
 	  ```
    3. Add time-series of the mascons corresponding to fixed points and output the total time-series and plot.
       ```
-	  ``` 	
+	  python combine_mascons.py parameters_voronoi_mascons.txt
+	  ```
+	  This will save a time-series of the sum of the mass balance of all the mascons corresponding to the fixed points, with a corresponding mass balance time-series.
+	  ![timeseries](./imgs/timeseries.png)
 
 # More Background
 

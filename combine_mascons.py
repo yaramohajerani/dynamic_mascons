@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 u"""
-combine_kernels.py
+combine_mascons.py
 by Yara Mohajerani
 
-Combine the sensitivity kernels of the sum of the 'fixed points'
-and produce netcdf and png outputs
+Combine the mascon timeseries for fixed points and plot
 
 Last Update 12/2020
 """
@@ -13,20 +12,12 @@ import os
 import sys
 import numpy as np
 import pandas as pd
-import geopandas as gpd
-import importlib.util
 import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-#-- also import gravity toolkit modules
-sys.path.append(os.path.expanduser('~/read-GRACE-harmonics'))
-sys.path.append(os.path.expanduser('~/read-GRACE-geocenter'))
-from gravity_toolkit.ncdf_write import ncdf_write
-from gravity_toolkit.ncdf_read import ncdf_read
 
 #------------------------------------------------------------------------------
 #-- create sensitivity kernels for given voronoi harmonics
 #------------------------------------------------------------------------------
-def combine_kernels(parameters):
+def combine_mascons(parameters):
 	#-- read fixed-point coordinates
 	coord_file = os.path.expanduser(parameters['COORD_FILE'])
 	df = pd.read_csv(coord_file)
@@ -41,7 +32,8 @@ def combine_kernels(parameters):
 	eps = float(parameters['EPSILON'])
 	#-- smoothing radius
 	RAD = int(parameters['RAD'])
-	#-- ocn redistribution label
+	#-- Set up output labels
+	DS = '_FL' if (parameters['DESTRIPE'] in ['Y','y']) else ''
 	OCN = '_OCN' if parameters['MASCON_OCEAN'] in ['Y','y'] else ''
 
 	#----------------------------------------------------------------------
@@ -60,44 +52,60 @@ def combine_kernels(parameters):
 		ind[i] = i*(len(phi_list)+1)
 
 	#----------------------------------------------------------------------
-	#-- Read and sum up kernels corresponding to fixed points
+	#-- Read and sum up mascon timeseries corresponding to fixed points
 	#----------------------------------------------------------------------
-	kerns = {}
+	mascon = {}
 	for i in ind:
 		#- read the netcdf files
-		kern_file = os.path.join(ddir,'MASCON_{0:d}_YLMS_{1:.2f}DEG_SKERNEL{2}_L{3:02d}_r{4:d}km.nc'.format(i,DDEG_RASTER,OCN,LMAX,RAD))
-		kerns[i] = ncdf_read(kern_file,DATE=False,TITLE=False)
+		mscn_file = os.path.join(ddir,'MASCON_{0:d}_YLMS_{1:.2f}DEG_AW13_ICE6G_GA{2}_L{3:02d}_r{4:d}km{5}.txt'.format(i,DDEG_RASTER,OCN,LMAX,RAD,DS))
+		mascon[i] = np.loadtxt(mscn_file)
 	#-- sum up the kernels
-	kern_sum = kerns[ind[0]]['data']
-	out_lbl = '{0:d}+'.format(ind[0])
-	for i in ind[1:]:
-		kern_sum += kerns[i]['data']
+	mons = np.array(mascon[i][:,0],dtype=int)
+	tdec = mascon[i][:,1]
+	mass = np.zeros(len(tdec))
+	err = np.zeros(len(tdec))
+	area = 0
+	out_lbl = ''
+	for i in ind:
+		mass += mascon[i][:,2]
+		err += mascon[i][:,3]**2
+		area += mascon[i][0,4]
 		out_lbl += '{0:d}+'.format(i)
+	#-- RMS of errors
+	err = np.sqrt(err)
 	#-- remove last '+' from output label
 	out_lbl = out_lbl[:-1]
 
 	#----------------------------------------------------------------------
-	#-- write kernel sum to file
+	#-- write sum to file
 	#----------------------------------------------------------------------
-	outfile = os.path.join(ddir,'MASCON_{0}_YLMS_{1:.2f}DEG_SKERNEL_OCN_L{2:02d}_r{3:d}km.nc'.format(out_lbl,DDEG_RASTER,LMAX,RAD))
-	ncdf_write(np.transpose(kern_sum),kerns[i]['lon'],kerns[i]['lat'],0,FILENAME=outfile,DATE=False,UNITS='unitless',LONGNAME='Sensitivity_Kernel')
+	outfile = os.path.join(ddir,'MASCON_{0}_YLMS_{1:.2f}DEG_AW13_ICE6G_GA{2}_L{3:02d}_r{4:d}km{5}.txt'.format(out_lbl,DDEG_RASTER,OCN,LMAX,RAD,DS))
+	fid = open(outfile,'w')
+	for i in range(len(tdec)):
+		fid.write('{0:03d} {1:12.4f} {2:16.10f} {3:16.10f} {4:16.5f}\n'.format(mons[i],tdec[i],mass[i],err[i],area))
+	fid.close()
 
 	#----------------------------------------------------------------------
-	#-- plot summed kernel
+	#-- plot total mass
 	#----------------------------------------------------------------------
-	#-- load in world map for plotting in background
-	world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
-	#-- plot summed kernel
-	fig, ax = plt.subplots(1,figsize = (10,6),dpi=100)
-	c = ax.contourf(kerns[i]['lon'],kerns[i]['lat'],kern_sum,cmap='bwr',levels=np.linspace(-1.5,1.5,16))
-	#-- use an axis divider for the colorbar
-	drx = make_axes_locatable(ax)
-	cax = drx.append_axes("right", size="5%", pad=0.1)
-	cbar = fig.colorbar(c,cax=cax)
-	cbar.set_label('Sensitivity Kernel (min:{0:.1f}, max:{1:.1f})'.format(np.min(kern_sum),np.max(kern_sum)))
-	world.plot(ax=ax,alpha=0.3,fc='none',ec='k',linewidth=1.2,rasterized=True)
-	plt.tight_layout()
-	plt.savefig(outfile.replace('.nc','.png'),format='PNG')
+	#-- get index of FO gap for plotting
+	fo = np.squeeze(np.nonzero(mons==198))
+
+	#-- make plot
+	fig = plt.figure(1,figsize=(15,9))
+	plt.plot(tdec[:fo],mass[:fo]-mass.mean(),color='blue')
+	plt.plot(tdec[fo:],mass[fo:]-mass.mean(),color='blue')
+	plt.fill_between(tdec[:fo],mass[:fo]-mass.mean()-err[:fo],y2=mass[:fo]-mass.mean()+err[:fo],color='deepskyblue',alpha=0.5)
+	plt.fill_between(tdec[fo:],mass[fo:]-mass.mean()-err[fo:],y2=mass[fo:]-mass.mean()+err[fo:],color='deepskyblue',alpha=0.5)
+	#-- Fill FO gap with vertical bar
+	#-- index of FO gap
+	#ind_gap = np.where((data[p][:,0]>186) & (data[p][:,0]<=198))
+	plt.axvspan(2017.5, 2018.37, color='lightgray',zorder=1,alpha=0.8)
+	plt.xlabel('Time [Decimal Years]',fontsize=14)
+	plt.ylabel('Mass [Gt]',fontsize=14)
+	plt.title('Total Mass Balance Time-Series of Mascons Corresponding to Fixed Points',fontsize=14)
+
+	plt.savefig(outfile.replace('.txt','.png'),format='PNG')
 	plt.close(fig=fig)
 
 #------------------------------------------------------------------------------
@@ -118,7 +126,7 @@ def main():
 				parameters[part[0]] = part[1]
 			fid.close()
 			#-- feed parameters to function to combine and plot kernels
-			combine_kernels(parameters)
+			combine_mascons(parameters)
 
 #------------------------------------------------------------------------------
 #-- run main program
