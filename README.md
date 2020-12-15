@@ -21,10 +21,10 @@ In the second notebook, the resulting final configuration is used to construct a
 The pipeline for running this procedure for any user-defined points from commandline is described below:
 
 1. Get required modules:
-   * Clone the dependency repositories (assuming base directory. But can change as desired):
+   * Clone needed repositories by [Tyler Sutterley](https://github.com/tsutterley) (The steps below assume these are cloned in root directory, but can be modified as desired):
     ```
     git clone https://github.com/tsutterley/read-GRACE-harmonics.git
-
+	
     git clone https://github.com/tsutterley/read-GRACE-geocenter.git
     ```
    * Download `pygplates`: https://www.gplates.org/download.html
