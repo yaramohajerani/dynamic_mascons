@@ -20,8 +20,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objs as go
 from scipy.spatial import SphericalVoronoi,geometric_slerp
-#-- import pygplates from local installation (change path accordingly or add permanently to paths)
-sys.path.append(os.path.expanduser('~/pygplates_rev28_python37_MacOS64'))
+#-- import pygplates (https://www.gplates.org/docs/pygplates/pygplates_getting_started.html#installation)
 import pygplates
 
 #-- configurations for unit sphere on which voronoi regions are constucted

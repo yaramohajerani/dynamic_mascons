@@ -29,12 +29,16 @@ In the second notebook, the resulting final configuration is used to construct a
 The command-line pipeline for running this procedure for any user-defined point(s) is described below:
 
 1. Get depedencies:
-   * Clone repository with needed modules by [Tyler Sutterley](https://github.com/tsutterley) (The steps below assume this is cloned in root directory, but can be modified as desired):
-    ```
-    git clone https://github.com/tsutterley/read-GRACE-harmonics.git
-    ```
-   * Download `pygplates`: https://www.gplates.org/download.html
-     * current version at the time of writing this repository is `pygplates_rev28_python37_MacOS64`, which has been downloaded to the root directory.  
+   * Install dependencies developed by [Tyler Sutterley](https://github.com/tsutterley) as part of the [read-GRACE-harmonics]() toolkit:
+      ```
+      python3 -m pip install --user git+https://github.com/tsutterley/read-GRACE-harmonics.git
+      ```
+	  Also make sure the path containing executable scripts	are part of your system `PATH`. In my case, I had to add `~/.local/bin` to my `PATH`.
+
+   * [Download](https://www.gplates.org/download.html) `pygplates`
+	
+	 Again make sure the path containing this module is added to your `PYTHONPATH`. In my case, I had to add `~/pygplates_rev28_python37_MacOS64` to my `PYTHONPATH`. (See [the installation instructions](https://www.gplates.org/docs/pygplates/pygplates_getting_started.html#installation) for more details.)
+
 2. Create the set of desired points in a `.csv` file, around which the global mascon configuration is created. E.g. the points used as the example in this repository for the Karakoram are:
 
     |LONS    | LATS    |
@@ -64,9 +68,9 @@ The command-line pipeline for running this procedure for any user-defined point(
 	![Sample far-field mascon with significantly larger size](./imgs/harmonics_37.png)
 5. Create the corresponding sensitivity kernels
 
-   **Note**: this requires the `read-GRACE-harmonics` repository that we cloned earlier. So you maybe have to change the path accordingly if you did not clone it into your root directory.
+   **Note**: This uses executable scripts that were installed as part of `read-GRACE-harmonics`. Provided that you have added the corresponding link to your system `PATH` (see step 1), you should be able to directly call the script without a preceding "python" command.
    ```
-   python ~/read-GRACE-harmonics/scripts/calc_sensitivity_kernel.py --reference CF parameters_voronoi_mascons.txt
+   calc_sensitivity_kernel.py --reference CF parameters_voronoi_mascons.txt
    ```
 
    This will save the harmonic and spatial representation of the sensivivity kernel of each mascon in the output directory specified in the parameter file. For a better understanding of the sensivity kernel, refer to [Jacob et al. 2011](http://doi.org/10.1007/s00190-011-0522-7).
@@ -87,7 +91,7 @@ The command-line pipeline for running this procedure for any user-defined point(
 	  The bash script will ask for your password and output directory to download the data and create date and index files.
    2. Fit the harmonics to the mascons:
 	  ```
-	  python ~/read-GRACE-harmonics/scripts/calc_mascon.py --reference CF --directory ~/data.dir/grace.dir parameters_voronoi_mascons.txt
+	  calc_mascon.py --reference CF --directory ~/data.dir/grace.dir parameters_voronoi_mascons.txt
 	  ```
    3. Add time-series of the mascons corresponding to fixed points and output the total time-series and plot.
       ```

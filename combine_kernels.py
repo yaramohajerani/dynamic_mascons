@@ -18,7 +18,6 @@ import importlib.util
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 #-- also import gravity toolkit modules
-sys.path.append(os.path.expanduser('~/read-GRACE-harmonics'))
 from gravity_toolkit.ncdf_write import ncdf_write
 from gravity_toolkit.ncdf_read import ncdf_read
 

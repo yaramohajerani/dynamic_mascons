@@ -16,11 +16,9 @@ import numpy as np
 import pandas as pd
 import importlib.util
 from scipy.spatial import SphericalVoronoi,geometric_slerp
-#-- import pygplates from local installation (change path accordingly or add permanently to paths)
-sys.path.append(os.path.expanduser('~/pygplates_rev28_python37_MacOS64'))
+#-- import pygplates (https://www.gplates.org/docs/pygplates/pygplates_getting_started.html#installation)
 import pygplates
 #-- also import gravity toolkit modules
-sys.path.append(os.path.expanduser('~/read-GRACE-harmonics'))
 from gravity_toolkit.gen_stokes import gen_stokes
 from gravity_toolkit.ncdf_stokes import ncdf_stokes
 from gravity_toolkit.ncdf_write import ncdf_write
