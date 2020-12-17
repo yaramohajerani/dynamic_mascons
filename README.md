@@ -48,9 +48,9 @@ The command-line pipeline for running this procedure for any user-defined point(
     * **It's important to keep the resolution of GRACE in mind when selecting these points. It won't be a problem if you just want to select a single coordinate and construct the mascons around it. But if specifying a few points that are strategically located on isolated geophysics signals, keep in mind that GRACE & GRACE-FO have a harmonic resolution of degree and order 60 or a spatial resolution of ~300km. It is possible to have smaller mascons, but you still have to add them together to respect the resolution of the satellites. The aim of this repository is not to downscale GRACE data, but to more strategically sample it with a user-defind non-uniform global mascon configuration for various regional analyses.**
 3. Create the mascon configuration using the an iterative spherical voronoi tessellation scheme:
     ```
-	python create_voronoi_regions.py --epsilon=0.5 --iterations=50 --ratio=0.025
+	python create_voronoi_regions.py --iterations=50 --ratio=0.025 parameters_compare_mascons.txt
 	```
-	where `epsilon` is the increment (in radians) used in the initial grid of generators used to create voronoi regions, `iterations` is the number of iterations, and `ratio` is the scaling factor for shifting centroids towards the fixed points in every iteration (inversely proportional to distance)
+	Note the `epsilon` parameter in the parameter file is the increment (in radians) used in the initial grid of generators used to create voronoi regions. `iterations` is the number of iterations, and `ratio` is the scaling factor for shifting centroids towards the fixed points in every iteration (inversely proportional to distance)
 
 	This script will save the final voronoi regions into file for later use, and also save an [interactive plot of the voronoi regions.](./imgs/spherical_voronoi_regions.html)
 	![](./imgs/voronoi_regions.png)

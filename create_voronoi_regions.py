@@ -30,7 +30,7 @@ origin = [0,0,0]
 #------------------------------------------------------------------------------
 #-- create plot
 #------------------------------------------------------------------------------
-def plot_html(new_centroids,new_sv,ind):
+def plot_html(new_centroids,new_sv,ind,ddir):
 	#-- plot generators
 	gens = go.Scatter3d(x=new_centroids[:, 0],y=new_centroids[:, 1],z=new_centroids[:, 2],mode='markers',marker={'size': 3,'opacity': 0.8,'color': 'blue'},name='Generator Points')
 	fixed = [None]*len(ind)
@@ -61,16 +61,23 @@ def plot_html(new_centroids,new_sv,ind):
 	fig = go.Figure(data=data, layout=layout)
 	
 	#-- save to file
-	fig.write_html(os.path.join(os.getcwd(),'imgs','spherical_voronoi_regions.html'))
+	fig.write_html(os.path.join(ddir,'spherical_voronoi_regions.html'))
 
 
 #------------------------------------------------------------------------------
 #-- calculate voronoi regions based on given fixed points
 #------------------------------------------------------------------------------
-def calc_regions(lons=[],lats=[],eps=0,n_iter=0,r_const=0):
+def calc_regions(parameters,n_iter=0,r_const=0):
 	#---------------------------------------------------------------
 	# Set up initial generator grid
 	#---------------------------------------------------------------
+	#-- read fixed-point coordinates
+	coord_file = os.path.expanduser(parameters['COORD_FILE'])
+	ddir = os.path.dirname(coord_file)
+	df = pd.read_csv(coord_file)
+	lons = np.array(df['LONS'])
+	lats = np.array(df['LATS'])
+	eps = float(parameters['EPSILON'])
 	#-- colatitude and longtiude lists in radians
 	phis = np.radians(90-lats)
 	thetas = np.radians(lons)
@@ -79,6 +86,7 @@ def calc_regions(lons=[],lats=[],eps=0,n_iter=0,r_const=0):
 	theta_list = np.concatenate([thetas,np.arange(eps,np.min(thetas),eps),np.arange(np.max(thetas)+eps,2*np.pi,eps)])
 	a1,a2 = np.meshgrid(phi_list,theta_list)
 	points = np.array([[r*np.sin(phi)*np.cos(theta),r*np.sin(phi)*np.sin(theta),r*np.cos(phi)] for phi,theta in zip(a1.flatten(),a2.flatten())])
+	print('Epsilon: {0:.2f}, Number of Points: {1:d}'.format(eps,len(points)))
 
 	#-- keep track of the index of the fixed points
 	ind = np.zeros(len(lons),dtype=int)
@@ -160,12 +168,12 @@ def calc_regions(lons=[],lats=[],eps=0,n_iter=0,r_const=0):
 	#---------------------------------------------------------------
 	#-- plot the final configuration and save to html
 	#---------------------------------------------------------------
-	plot_html(new_centroids,new_sv,ind)
+	plot_html(new_centroids,new_sv,ind,ddir)
 
 	#---------------------------------------------------------------
 	#-- Finally, save spherical voronoi object to file
 	#---------------------------------------------------------------
-	with open(os.path.join(os.getcwd(),'data','sv_obj_test'), 'wb') as out_file:
+	with open(os.path.join(ddir,'sv_obj'), 'wb') as out_file:
 		pickle.dump(new_sv, out_file)
 
 #------------------------------------------------------------------------------
@@ -173,24 +181,27 @@ def calc_regions(lons=[],lats=[],eps=0,n_iter=0,r_const=0):
 #------------------------------------------------------------------------------
 def main():
 	#-- read user-defiend fixed points
-	optlist, input_files=getopt.getopt(sys.argv[1:],'E:I:R',['epsilon=','iterations=','ratio='])
-	eps = 0.5
+	optlist, input_files=getopt.getopt(sys.argv[1:],'I:R',['iterations=','ratio='])
 	n_iter = 50
 	r_const = 0.025
 	for opt, arg in optlist:
-		if opt in ('-E','--epsilon'):
-			eps = float(arg)
-		elif opt in ('I','--iterations'):
+		if opt in ('I','--iterations'):
 			n_iter = int(arg)
 		elif opt in ('R','--ratio'):
 			r_const = float(arg)
 	if not input_files:
-		sys.exit("No fixed points specified.")
+		sys.exit('No parameter file given')
 	else:
 		for infile in input_files:
-			df = pd.read_csv(infile)
-			calc_regions(lons=np.array(df['LONS']),lats=np.array(df['LATS']),\
-				eps=eps,n_iter=n_iter,r_const=r_const)
+			parameters = {}
+			#-- for each paramter file, extract parameters
+			fid = open(infile, 'r')
+			for fileline in fid:
+				part = fileline.split()
+				parameters[part[0]] = part[1]
+			fid.close()
+			#-- feed parameters to function to compare mascon solutions
+			calc_regions(parameters,n_iter=n_iter,r_const=r_const)
 
 #------------------------------------------------------------------------------
 #-- run main program
