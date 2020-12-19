@@ -5,8 +5,8 @@ DDEG_OUT	0.5
 LMAX	60
 MMAX	60
 LMIN	0
-LOVE_FILE	~/read-GRACE-harmonics/gravity_toolkit/data/karakoram/love_numbers
-OUT_DIRECTORY	~/dynamic_mascons/data/karakoram/test_dir
+LOVE_FILE	~/read-GRACE-harmonics/gravity_toolkit/data/love_numbers
+HARMONIC_DIRECTORY	~/dynamic_mascons/data/karakoram/harmonics
 EPSILON	0.35
 MAKE_HARMONICS	Y
 MAKE_SPATIAL	Y
@@ -17,8 +17,12 @@ MASCON_OCEAN	Y
 DDEG	0.5,0.5
 INTERVAL	1
 LANDMASK	~/data.dir/coasts.dir/landsea_hd.nc
-MASCON_INDEX	~/dynamic_mascons/data/karakoram/test_dir/mascon_Ylms_index_L60_0.25deg.txt
-MSCN_DIRECTORY	~/dynamic_mascons/data/karakoram/MSCNS.dir
+MASCON_INDEX	~/dynamic_mascons/data/karakoram/harmonics/mascon_Ylms_index_L60_0.25deg.txt
+DIRECTORY	~/dynamic_mascons/data/karakoram/MSCNS
+MSCN_NUMS	0,18,21,30
+MSCN_NAME   karakoram_SE
+#MSCN_NUMS	9,18
+#MSCN_NAME	karakoram_NW
 PROC	JPL
 DREL		RL06	
 DSET		GSM	
@@ -36,4 +40,11 @@ REMOVE_INDEX		None
 REDISTRIBUTE_REMOVED		N	
 RECONSTRUCT		N	
 DESTRIPE		Y	
-MEAN_FILE		None	
+MEAN_FILE		None
+#PARAMETERS FOR COMPARISON
+JPL_INPUT   ~/data.dir/mascons.dir/JPL.dir/RL06M.dir/CRI/GRCTellus.JPL.200204_202007.GLO.RL06M.MSCNv02CRI.nc
+JPL_MSCNS   ~/data.dir/mascons.dir/JPL.dir/JPL_MASCON_mask/JPL_MSCN_3deg_grid/JPL_MSCN_3deg_grid.shp 
+GSFC_MSCNS  ~/data.dir/mascons.dir/Goddard.dir/mascon_grid.dir/goddard_1degree_mascon_grid.shp 
+RGI_DIR ~/data.dir/RGI
+LAT_LIMITS  22,47
+LON_LIMITS  62,105   	

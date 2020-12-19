@@ -13,8 +13,6 @@ import os
 import sys
 import pickle
 import numpy as np
-import pandas as pd
-import importlib.util
 from scipy.spatial import SphericalVoronoi,geometric_slerp
 #-- import pygplates (https://www.gplates.org/docs/pygplates/pygplates_getting_started.html#installation)
 import pygplates
@@ -44,8 +42,10 @@ def calc_harmonics(parameters):
 	#-- read love numbers from file in parameter file
 	love_file = os.path.expanduser(parameters['LOVE_FILE'])
 	hl,kl,ll = read_love_numbers(love_file,REFERENCE='CF')
-	#-- get output directory
-	out_dir = os.path.expanduser(parameters['OUT_DIRECTORY'])
+	#-- get output directory and create it if it doesn't exist
+	out_dir = os.path.expanduser(parameters['HARMONIC_DIRECTORY'])
+	if not os.path.exists(out_dir):
+		os.mkdir(out_dir)
 
 	#-----------------------------------------------------------------------------
 	#-- Now we make a grid so we can rasterize the polygons onto a grid

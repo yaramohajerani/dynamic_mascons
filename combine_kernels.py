@@ -12,9 +12,7 @@ Last Update 12/2020
 import os
 import sys
 import numpy as np
-import pandas as pd
 import geopandas as gpd
-import importlib.util
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 #-- also import gravity toolkit modules
@@ -25,57 +23,36 @@ from gravity_toolkit.ncdf_read import ncdf_read
 #-- create sensitivity kernels for given voronoi harmonics
 #------------------------------------------------------------------------------
 def combine_kernels(parameters):
-	#-- read fixed-point coordinates
-	coord_file = os.path.expanduser(parameters['COORD_FILE'])
-	df = pd.read_csv(coord_file)
-	lons=np.array(df['LONS'])
-	lats=np.array(df['LATS'])
 	DDEG_RASTER = float(parameters['DDEG_RASTER'])
 	#-- read harmonic parameters
 	LMAX = int(parameters['LMAX'])
 	#-- get output directory
-	ddir = os.path.expanduser(parameters['MSCN_DIRECTORY'])
-	#-- get the spacing for the original generator points (to get indices of fixed points)
-	eps = float(parameters['EPSILON'])
+	ddir = os.path.expanduser(parameters['DIRECTORY'])
 	#-- smoothing radius
 	RAD = int(parameters['RAD'])
 	#-- ocn redistribution label
 	OCN = '_OCN' if parameters['MASCON_OCEAN'] in ['Y','y'] else ''
 
-	#----------------------------------------------------------------------
-	#-- recalculate initial generator grid to get indices of fixed points
-	#----------------------------------------------------------------------
-	#-- colatitude and longtiude lists in radians
-	phis = np.radians(90-lats)
-	thetas = np.radians(lons)
-	#-- fill the rest of the coordinates (initial generators)
-	phi_list = np.concatenate([phis,np.arange(eps,np.min(phis),eps),np.arange(np.max(phis)+eps,np.pi,eps)])
-	theta_list = np.concatenate([thetas,np.arange(eps,np.min(thetas),eps),np.arange(np.max(thetas)+eps,2*np.pi,eps)])
-
-	#-- keep track of the index of the fixed points
-	ind = np.zeros(len(lons),dtype=int)
-	for i in range(1,len(lons)):
-		ind[i] = i*(len(phi_list)+1)
+	#-- load mascon configuration of interest
+	mascon_nums = np.array(parameters['MSCN_NUMS'].split(','),dtype=int)
+	mascon_name = parameters['MSCN_NAME']
+	out_lbl = '{0}_{1}'.format(mascon_name,parameters['MSCN_NUMS'].replace(',','+'))
 
 	#----------------------------------------------------------------------
 	#-- Read and sum up kernels corresponding to fixed points
 	#----------------------------------------------------------------------
 	kerns = {}
-	for i in ind:
+	for i in mascon_nums:
 		#- read the netcdf files
 		kern_file = os.path.join(ddir,'MASCON_{0:d}_YLMS_{1:.2f}DEG_SKERNEL{2}_L{3:02d}_r{4:d}km.nc'.format(i,DDEG_RASTER,OCN,LMAX,RAD))
 		kerns[i] = ncdf_read(kern_file,DATE=False,TITLE=False)
 	#-- sum up the kernels
-	kern_sum = kerns[ind[0]]['data']
-	out_lbl = '{0:d}+'.format(ind[0])
-	for i in ind[1:]:
+	kern_sum = kerns[mascon_nums[0]]['data']
+	for i in mascon_nums[1:]:
 		kern_sum += kerns[i]['data']
-		out_lbl += '{0:d}+'.format(i)
-	#-- remove last '+' from output label
-	out_lbl = out_lbl[:-1]
 	#-- get grid for saving combined sensitivity kernel
-	glat = kerns[ind[0]]['lat']
-	glon = kerns[ind[0]]['lon']
+	glat = kerns[mascon_nums[0]]['lat']
+	glon = kerns[mascon_nums[0]]['lon']
 
 	#----------------------------------------------------------------------
 	#-- write kernel sum to file
@@ -90,7 +67,8 @@ def combine_kernels(parameters):
 	world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
 	#-- plot summed kernel
 	fig, ax = plt.subplots(1,figsize = (10,6),dpi=100)
-	c = ax.contourf(glon,glat,kern_sum,cmap='bwr',levels=np.linspace(-1.5,1.5,16))
+	klim = np.max(np.abs(kern_sum))*0.95
+	c = ax.contourf(glon,glat,kern_sum,cmap='bwr',levels=np.linspace(-klim,klim,16))
 	#-- use an axis divider for the colorbar
 	drx = make_axes_locatable(ax)
 	cax = drx.append_axes("right", size="5%", pad=0.1)
