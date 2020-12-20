@@ -11,51 +11,33 @@ Last Update 12/2020
 import os
 import sys
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 
 #------------------------------------------------------------------------------
 #-- create sensitivity kernels for given voronoi harmonics
 #------------------------------------------------------------------------------
 def combine_mascons(parameters):
-	#-- read fixed-point coordinates
-	coord_file = os.path.expanduser(parameters['COORD_FILE'])
-	df = pd.read_csv(coord_file)
-	lons=np.array(df['LONS'])
-	lats=np.array(df['LATS'])
 	DDEG_RASTER = float(parameters['DDEG_RASTER'])
 	#-- read harmonic parameters
 	LMAX = int(parameters['LMAX'])
 	#-- get output directory
-	ddir = os.path.expanduser(parameters['MSCN_DIRECTORY'])
-	#-- get the spacing for the original generator points (to get indices of fixed points)
-	eps = float(parameters['EPSILON'])
+	ddir = os.path.expanduser(parameters['DIRECTORY'])
 	#-- smoothing radius
 	RAD = int(parameters['RAD'])
 	#-- Set up output labels
 	DS = '_FL' if (parameters['DESTRIPE'] in ['Y','y']) else ''
 	OCN = '_OCN' if parameters['MASCON_OCEAN'] in ['Y','y'] else ''
 
-	#----------------------------------------------------------------------
-	#-- recalculate initial generator grid to get indices of fixed points
-	#----------------------------------------------------------------------
-	#-- colatitude and longtiude lists in radians
-	phis = np.radians(90-lats)
-	thetas = np.radians(lons)
-	#-- fill the rest of the coordinates (initial generators)
-	phi_list = np.concatenate([phis,np.arange(eps,np.min(phis),eps),np.arange(np.max(phis)+eps,np.pi,eps)])
-	theta_list = np.concatenate([thetas,np.arange(eps,np.min(thetas),eps),np.arange(np.max(thetas)+eps,2*np.pi,eps)])
-
-	#-- keep track of the index of the fixed points
-	ind = np.zeros(len(lons),dtype=int)
-	for i in range(1,len(lons)):
-		ind[i] = i*(len(phi_list)+1)
+	#-- load mascon configuration of interest
+	mascon_nums = np.array(parameters['MSCN_NUMS'].split(','),dtype=int)
+	mascon_name = parameters['MSCN_NAME']
+	out_lbl = '{0}_{1}'.format(mascon_name,parameters['MSCN_NUMS'].replace(',','+'))
 
 	#----------------------------------------------------------------------
 	#-- Read and sum up mascon timeseries corresponding to fixed points
 	#----------------------------------------------------------------------
 	mascon = {}
-	for i in ind:
+	for i in mascon_nums:
 		#- read the netcdf files
 		mscn_file = os.path.join(ddir,'MASCON_{0:d}_YLMS_{1:.2f}DEG_AW13_ICE6G_GA{2}_L{3:02d}_r{4:d}km{5}.txt'.format(i,DDEG_RASTER,OCN,LMAX,RAD,DS))
 		mascon[i] = np.loadtxt(mscn_file)
@@ -65,16 +47,12 @@ def combine_mascons(parameters):
 	mass = np.zeros(len(tdec))
 	err = np.zeros(len(tdec))
 	area = 0
-	out_lbl = ''
-	for i in ind:
+	for i in mascon_nums:
 		mass += mascon[i][:,2]
 		err += mascon[i][:,3]**2
 		area += mascon[i][0,4]
-		out_lbl += '{0:d}+'.format(i)
 	#-- RMS of errors
 	err = np.sqrt(err)
-	#-- remove last '+' from output label
-	out_lbl = out_lbl[:-1]
 
 	#----------------------------------------------------------------------
 	#-- write sum to file
@@ -103,7 +81,7 @@ def combine_mascons(parameters):
 	plt.axvspan(2017.5, 2018.37, color='lightgray',zorder=1,alpha=0.8)
 	plt.xlabel('Time [Decimal Years]',fontsize=14)
 	plt.ylabel('Mass [Gt]',fontsize=14)
-	plt.title('Total Mass Balance Time-Series of Mascons Corresponding to Fixed Points',fontsize=14)
+	plt.title('Total Mass Balance Time-Series of Mascons {0}'.format(out_lbl),fontsize=14)
 
 	plt.savefig(outfile.replace('.txt','.png'),format='PNG')
 	plt.close(fig=fig)
