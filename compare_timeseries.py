@@ -12,6 +12,7 @@ import sys
 import pickle
 import numpy as np
 import netCDF4 as nc
+import h5py as h5
 import geopandas as gpd
 import matplotlib.pyplot as plt
 from shapely.geometry import Point,Polygon
@@ -105,6 +106,7 @@ def compare_timeseries(parameters):
 	for m in range(len(df_mask)):
 		#-- include polygons if intersection is more than a quarter of the mascon area
 		if poly_sum.intersection(df_mask['geometry'][m]).area > df_mask['geometry'][m].area/4:
+			print("Including JPL Mascon {0}".format(m))
 			#-- sum up grid poitns that are within df_mask['geometry'][m]
 			for i in range(len(jpl_lons)):
 				for j in range(len(jpl_lats)):
@@ -123,15 +125,32 @@ def compare_timeseries(parameters):
 	#----------------------------------------------------------------------
 	#-- Read Corresponding Goddard Mascons
 	#----------------------------------------------------------------------
-	# gsfc_dir = os.path.expanduser(parameters['GSFC_DIR'])
+	gsfc_file = os.path.expanduser(parameters['GSFC_INPUT'])
+	f = h5.File(gsfc_file,'r')
+	N = int(f['size']['N_mascons'][()])
+	gsfc_mass = np.squeeze(np.array(f['solution']['cmwe']))
+	gsfc_lons = np.squeeze(np.array(f['mascon']['lon_center']))
+	gsfc_lats = np.squeeze(np.array(f['mascon']['lat_center']))
+	gsfc_area = np.squeeze(np.array(f['mascon']['area_km2']))
+	gsfc_y,gsfc_doy,gsfc_tdec = np.array(f['time']['yyyy_doy_yrplot_middle'])
+	#-- initialize mass timeseries
+	gsfc_ts = np.zeros(len(gsfc_tdec))
+	for i in range(N):
+		#-- count mascon if it's center is in polygon
+		if poly_sum.contains(Point(gsfc_lons[i],gsfc_lats[i])):
+			#-- convert cmWE * km^2 * 10^10 to get grams, then divide by 10^15 convert to Gt
+			#-- which is equivalent to dividing by 10^5
+			gsfc_ts += (gsfc_mass[i,:]*gsfc_area[i])/1e5
+	f.close()
 
 	#----------------------------------------------------------------------
 	#-- Plot Comparison
 	#----------------------------------------------------------------------
 	fig = plt.figure(1,figsize=(9,6))
-	plt.plot(vr_tdec,vr_mass,label='Voronoi Mascons',zorder=1)
-	plt.plot(jpl_tdec,jpl_ts,label='JPL Mascons',zorder=2)
-	plt.axvspan(2017.5, 2018.37, color='lightgray',zorder=3)
+	plt.plot(vr_tdec,vr_mass,color='k',label='Voronoi Mascons',zorder=1)
+	plt.plot(jpl_tdec,jpl_ts,color='red',label='JPL Mascons',zorder=2)
+	plt.plot(gsfc_tdec,gsfc_ts,color='cyan',label='GSFC Mascons',zorder=3)
+	plt.axvspan(2017.5, 2018.37, color='lightgray',zorder=4)
 	plt.legend()
 	plt.xlabel('Time [Decimal Year]')
 	plt.ylabel('Mass [Gt]')
