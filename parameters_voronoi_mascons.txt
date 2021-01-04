@@ -1,3 +1,5 @@
+N_ITERATIONS	50
+R_CONSTANT	0.025
 VORONOI_FILE	~/dynamic_mascons/data/karakoram/sv_obj
 COORD_FILE	~/dynamic_mascons/data/karakoram/fixed_points_sample.csv 
 DDEG_RASTER	0.25

@@ -1,25 +1,20 @@
 #!/usr/bin/env python
 u"""
-create_voronoi_regions.py
+plot_voronoi_regions.py
 by Yara Mohajerani
 
-Get coordinates of fixed points from user and create
-self-adjusting non-uniform voronoi regions around them.
-
-Save voronoi regions as scipy SphericalVoronoi objects
-and save an interactive html figure of the regions
+Plot the output of create_voronoi_regions
 
 Last Update: 12/2020
 """
 import os
 import sys
-import copy
 import pickle
 import numpy as np
 import pandas as pd
 import geopandas as gpd
 import plotly.graph_objs as go
-from scipy.spatial import SphericalVoronoi,geometric_slerp
+from scipy.spatial import geometric_slerp
 #-- import pygplates (https://www.gplates.org/docs/pygplates/pygplates_getting_started.html#installation)
 import pygplates
 
@@ -59,14 +54,14 @@ def plot_html(new_centroids,new_sv,ind,ddir):
 				#-- make line on sphere
 				pl = pygplates.PolylineOnSphere(list(zip(lats,lons)))
 				xyz = pl.to_xyz_array()
-				cline = go.Scatter3d(x=xyz[:,0],y=xyz[:,1],z=xyz[:,2],mode='lines',line={'width': 2,'color': 'green'},name='Land',showlegend=False)
+				cline = go.Scatter3d(x=xyz[:,0],y=xyz[:,1],z=xyz[:,2],mode='lines',line={'width': 3,'color': 'green'},name='Land',showlegend=False)
 				data.append(cline)
 		else:
 			lons,lats = world['geometry'][i].exterior.coords.xy
 			#-- make line on sphere
 			pl = pygplates.PolylineOnSphere(list(zip(lats,lons)))
 			xyz = pl.to_xyz_array()
-			cline = go.Scatter3d(x=xyz[:,0],y=xyz[:,1],z=xyz[:,2],mode='lines',line={'width': 2,'color': 'green'},name='Land',showlegend=False)
+			cline = go.Scatter3d(x=xyz[:,0],y=xyz[:,1],z=xyz[:,2],mode='lines',line={'width': 3,'color': 'green'},name='Land',showlegend=False)
 			data.append(cline)
 
 	#-- configure layout
@@ -90,8 +85,9 @@ def calc_regions(parameters):
 	#---------------------------------------------------------------
 	# Set up initial generator grid
 	#---------------------------------------------------------------
-	n_iter = int(parameters['N_ITERATIONS'])
-	r_const = float(parameters['R_CONSTANT'])	
+	input_file = os.path.expanduser(parameters['VORONOI_FILE'])
+	with open(input_file, 'rb') as in_file:
+		sv = pickle.load(in_file)
 	#-- read fixed-point coordinates
 	coord_file = os.path.expanduser(parameters['COORD_FILE'])
 	ddir = os.path.dirname(coord_file)
@@ -114,20 +110,6 @@ def calc_regions(parameters):
 	for i in range(1,len(lons)):
 		ind[i] = i*(len(phi_list)+1)
 
-	#-- test indices
-	tmp_coords = list(zip(a1.flatten(),a2.flatten()))
-	print('CHECK:')
-	print("Co-Latitude of fixed points (radians): ",phi_list[:len(lats)])
-	print("  Longitude of fixed points (radians): ",theta_list[:len(lons)])
-	for i in range(len(lons)):
-		print("Recovered Point {0:d} (ind {1:02d}): {2}".format(i, ind[i] ,tmp_coords[ind[i]]))
-
-	#---------------------------------------------------------------
-	#-- create initial spherical voronoi tessellations
-	#---------------------------------------------------------------
-	sv = SphericalVoronoi(points, r, origin)
-	sv.sort_vertices_of_regions()
-
 	#---------------------------------------------------------------
 	#-- Calculate centroids
 	#---------------------------------------------------------------
@@ -139,63 +121,14 @@ def calc_regions(parameters):
 		#-- get centroid
 		# centroids[i] = np.array(poly.get_interior_centroid().to_xyz())
 		centroids[i] = np.array(poly.get_boundary_centroid().to_xyz())
-	#-- set the centroid of the fixed points back to their original values
-	for i in ind:
-		centroids[i] = points[i]
-
-	#---------------------------------------------------------------
-	# use the great circle distance between a given centroid and a
-	#  reference point to shift the centroids
-	#---------------------------------------------------------------
-	#-- get reference point coordinates for calcuting distances to reference point
-	lat0 = np.mean(lats)
-	lon0 = np.mean(lons)
-	#-- convert to point on unit sphere
-	ref_pt = pygplates.PointOnSphere([lat0,lon0])
-
-	#-- Now iteratively use centroids as new generators to see updated configuration
-	new_centroids = copy.copy(centroids)
-	for _ in range(n_iter):
-		new_sv = SphericalVoronoi(new_centroids, r, origin)
-		new_sv.sort_vertices_of_regions()
-		#-- calculate the centroids
-		new_centroids = np.zeros((len(new_sv.regions),3))
-		for i,region in enumerate(new_sv.regions):
-			reg_vert = new_sv.vertices[region]
-			#-- create polygon on surface of sphere
-			poly = pygplates.PolygonOnSphere(reg_vert)
-			#-- get centroid
-			# cc = poly.get_interior_centroid()
-			cc = poly.get_boundary_centroid()
-			#-- get great-circle distance to reference point
-			dist = cc.distance(cc,ref_pt)
-			#-- convert to lat/lon
-			clat,clon = np.array(cc.to_lat_lon())
-			#-- shift with res[ect to reference point
-			#-- the shift ratio is inversely proportional to the distance
-			ratio = r_const*(np.pi-dist)
-			clon_shift = clon-ratio*(clon-lon0)
-			clat_shift = clat-ratio*(clat-lat0)
-			#-- convert shifted centroid from lat/lon to xyz on unit sphere
-			tmp_pt = pygplates.PointOnSphere([clat_shift,clon_shift])
-			new_centroids[i] = np.array(tmp_pt.to_xyz())
-		#-- set the centroid of the fixed points back to their original values
-		for i in ind:
-			new_centroids[i] = points[i]
-	#-- perform final tesselation based on new centroids
-	new_sv = SphericalVoronoi(new_centroids, r, origin)
-	new_sv.sort_vertices_of_regions()
+	# #-- set the centroid of the fixed points back to their original values
+	# for i in ind:
+	# 	centroids[i] = points[i]
 
 	#---------------------------------------------------------------
 	#-- plot the final configuration and save to html
 	#---------------------------------------------------------------
-	plot_html(new_centroids,new_sv,ind,ddir)
-
-	#---------------------------------------------------------------
-	#-- Finally, save spherical voronoi object to file
-	#---------------------------------------------------------------
-	with open(os.path.join(ddir,'sv_obj'), 'wb') as out_file:
-		pickle.dump(new_sv, out_file)
+	plot_html(centroids,sv,ind,ddir)
 
 #------------------------------------------------------------------------------
 #-- main function
