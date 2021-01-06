@@ -13,12 +13,14 @@ import pickle
 import numpy as np
 import netCDF4 as nc
 import h5py as h5
+import pandas as pd
 import geopandas as gpd
 import matplotlib.pyplot as plt
 from shapely.geometry import Point,Polygon
 from shapely.ops import unary_union
 import pygplates
 from gravity_toolkit.convert_calendar_decimal import convert_calendar_decimal
+from gravity_toolkit.tsregress import tsregress
 
 rad_e = 6.371e8  # -- Average Radius of the Earth [cm]
 
@@ -62,94 +64,164 @@ def compare_timeseries(parameters):
 		print("Polygon {0}: area = {1}".format(i,p.area))
 	poly_sum = unary_union(polys)
 
+	#-- create dictionaries for time and mass
+	tdec = {}
+	mass = {}
 	#----------------------------------------------------------------------
 	#-- Read the customized mascon timeseries
 	#----------------------------------------------------------------------
 	mscn_file = os.path.join(ddir,'MASCON_{0}_YLMS_{1:.2f}DEG_AW13_ICE6G_GA{2}_L{3:02d}_r{4:d}km{5}.txt'.format(lbl,DDEG_RASTER,OCN,LMAX,RAD,DS))
 	ts = np.loadtxt(mscn_file)
-	vr_tdec = ts[:,1]
-	vr_mass = ts[:,2]
+	tdec['vor'] = ts[:,1]
+	mass['vor'] = ts[:,2]
 
 	#----------------------------------------------------------------------
 	#-- Get Corresponding JPL Mascons
 	#----------------------------------------------------------------------
-	jpl_file = os.path.expanduser(parameters['JPL_INPUT'])
-	#-- read file
-	fid = nc.Dataset(jpl_file, 'r')
-	jpl_mass = fid.variables['lwe_thickness'][:]
-	jpl_lons = fid.variables['lon'][:]
-	jpl_lats = fid.variables['lat'][:]
-	jpl_time_var = fid.variables['time']
-	jpl_dtime = nc.num2date(jpl_time_var[:],jpl_time_var.units)
-	fid.close()
-	
-	#-- get grid increments for area calculation later on
-	dth = np.radians(np.abs(jpl_lats[1] - jpl_lats[0]))
-	dphi = np.radians(np.abs(jpl_lons[1] - jpl_lons[0]))
+	#-- if timeseries file already exists, read it. Otherwise create it
+	jpl_ts_file = os.path.join(ddir,'MASCON_{0}_JPL_timeseries.txt'.format(lbl))
+	if os.path.exists(jpl_ts_file):
+		print("Reading JPL timeseries from file.")
+		#-- read file
+		jpl_data = np.loadtxt(jpl_ts_file,skiprows=1)
+		tdec['jpl'] = jpl_data[:,0]
+		mass['jpl'] = jpl_data[:,1]
+	else:
+		jpl_file = os.path.expanduser(parameters['JPL_INPUT'])
+		#-- read file
+		fid = nc.Dataset(jpl_file, 'r')
+		jpl_mass = fid.variables['lwe_thickness'][:]
+		jpl_lons = fid.variables['lon'][:]
+		jpl_lats = fid.variables['lat'][:]
+		jpl_time_var = fid.variables['time']
+		jpl_dtime = nc.num2date(jpl_time_var[:],jpl_time_var.units)
+		fid.close()
+		
+		#-- get grid increments for area calculation later on
+		dth = np.radians(np.abs(jpl_lats[1] - jpl_lats[0]))
+		dphi = np.radians(np.abs(jpl_lons[1] - jpl_lons[0]))
 
-	#-- also read land mask to mask out ocean mascons (because we are comparing to GSM harmonics)
-	landmask_file = os.path.expanduser(parameters['JPL_LANDMASK'])
-	#-- read file
-	fid = nc.Dataset(landmask_file, 'r')
-	jpl_landocean = fid.variables['land_mask'][:]
-	fid.close()
-	#-- multiply mass change over ocean by 0
-	jpl_mass *= jpl_landocean
+		#-- also read land mask to mask out ocean mascons (because we are comparing to GSM harmonics)
+		landmask_file = os.path.expanduser(parameters['JPL_LANDMASK'])
+		#-- read file
+		fid = nc.Dataset(landmask_file, 'r')
+		jpl_landocean = fid.variables['land_mask'][:]
+		fid.close()
+		#-- multiply mass change over ocean by 0
+		jpl_mass *= jpl_landocean
 
-	# #-- also read the JPL mascon mask
-	df_mask =  gpd.read_file(os.path.expanduser(parameters['JPL_MSCNS']))
+		# #-- also read the JPL mascon mask
+		df_mask =  gpd.read_file(os.path.expanduser(parameters['JPL_MSCNS']))
 
-	#-- initialize jpl arrays
-	jpl_ts = np.zeros(len(jpl_dtime))
-	jpl_tdec = np.zeros(len(jpl_dtime))
-	#-- add up mascons are inside the polygon union
-	for m in range(len(df_mask)):
-		#-- include polygons if intersection is more than a quarter of the mascon area
-		if poly_sum.intersection(df_mask['geometry'][m]).area > df_mask['geometry'][m].area/4:
-			print("Including JPL Mascon {0}".format(m))
-			#-- sum up grid poitns that are within df_mask['geometry'][m]
-			for i in range(len(jpl_lons)):
-				for j in range(len(jpl_lats)):
-					if df_mask['geometry'][m].contains(Point(jpl_lons[i],jpl_lats[j])):
-						#-- calculate grid area for cmWE to Gt convesion
-						th = np.radians(90. - jpl_lats[j])
-						#-- area in cm^2
-						area = (rad_e**2)*dphi*dth*np.sin(th)
-						#-- convert cmWE * cm^2 to get grams, then convert to Gt
-						jpl_ts += (jpl_mass[:,j,i]*area)/1e15
-	#-- convert dates to decimal years
-	for t in range(len(jpl_dtime)):
-		jpl_tdec[t] = convert_calendar_decimal(jpl_dtime[t].year,jpl_dtime[t].month,DAY=jpl_dtime[t].day,\
-			HOUR=jpl_dtime[t].hour,MINUTE=jpl_dtime[t].minute,SECOND=jpl_dtime[t].second)
-	
+		#-- initialize jpl arrays
+		mass['jpl'] = np.zeros(len(jpl_dtime))
+		tdec['jpl'] = np.zeros(len(jpl_dtime))
+		#-- add up mascons are inside the polygon union
+		for m in range(len(df_mask)):
+			#-- include polygons if intersection is more than a quarter of the mascon area
+			if poly_sum.intersection(df_mask['geometry'][m]).area > df_mask['geometry'][m].area/4:
+				print("Including JPL Mascon {0}".format(m))
+				#-- sum up grid poitns that are within df_mask['geometry'][m]
+				for i in range(len(jpl_lons)):
+					for j in range(len(jpl_lats)):
+						if df_mask['geometry'][m].contains(Point(jpl_lons[i],jpl_lats[j])):
+							#-- calculate grid area for cmWE to Gt convesion
+							th = np.radians(90. - jpl_lats[j])
+							#-- area in cm^2
+							area = (rad_e**2)*dphi*dth*np.sin(th)
+							#-- convert cmWE * cm^2 to get grams, then convert to Gt
+							mass['jpl'] += (jpl_mass[:,j,i]*area)/1e15
+		#-- convert dates to decimal years
+		for t in range(len(jpl_dtime)):
+			tdec['jpl'][t] = convert_calendar_decimal(jpl_dtime[t].year,jpl_dtime[t].month,DAY=jpl_dtime[t].day,\
+				HOUR=jpl_dtime[t].hour,MINUTE=jpl_dtime[t].minute,SECOND=jpl_dtime[t].second)
+		
+		#-- write JPL timeseris to file
+		fid = open(jpl_ts_file,'w')
+		fid.write('Decimal-Years   Mass(Gt)\n')
+		for t in range(len(tdec['jpl'])):
+			fid.write('{0:.4f}  {1:.4f}\n'.format(tdec['jpl'][t],mass['jpl'][t]))
+		fid.close()
+
 	#----------------------------------------------------------------------
 	#-- Read Corresponding Goddard Mascons
 	#----------------------------------------------------------------------
-	gsfc_file = os.path.expanduser(parameters['GSFC_INPUT'])
-	f = h5.File(gsfc_file,'r')
-	N = int(f['size']['N_mascons'][()])
-	gsfc_mass = np.squeeze(np.array(f['solution']['cmwe']))
-	gsfc_lons = np.squeeze(np.array(f['mascon']['lon_center']))
-	gsfc_lats = np.squeeze(np.array(f['mascon']['lat_center']))
-	gsfc_area = np.squeeze(np.array(f['mascon']['area_km2']))
-	gsfc_y,gsfc_doy,gsfc_tdec = np.array(f['time']['yyyy_doy_yrplot_middle'])
-	#-- initialize mass timeseries
-	gsfc_ts = np.zeros(len(gsfc_tdec))
-	for i in range(N):
-		#-- count mascon if it's center is in polygon
-		if poly_sum.contains(Point(gsfc_lons[i],gsfc_lats[i])):
-			#-- convert cmWE * km^2 * 10^10 to get grams, then divide by 10^15 convert to Gt
-			#-- which is equivalent to dividing by 10^5
-			gsfc_ts += (gsfc_mass[i,:]*gsfc_area[i])/1e5
-	f.close()
+	#-- if timeseries file already exists, read it. Otherwise create it
+	gsfc_ts_file = os.path.join(ddir,'MASCON_{0}_GSFC_timeseries.txt'.format(lbl))
+	if os.path.exists(gsfc_ts_file):
+		print("Reading GSFC time-series from file.")
+		#-- read file
+		gsfc_data = np.loadtxt(gsfc_ts_file,skiprows=1)
+		tdec['gsfc'] = gsfc_data[:,0]
+		mass['gsfc'] = gsfc_data[:,1]
+	else:
+		gsfc_file = os.path.expanduser(parameters['GSFC_INPUT'])
+		f = h5.File(gsfc_file,'r')
+		N = int(f['size']['N_mascons'][()])
+		gsfc_mass = np.squeeze(np.array(f['solution']['cmwe']))
+		gsfc_lons = np.squeeze(np.array(f['mascon']['lon_center']))
+		gsfc_lats = np.squeeze(np.array(f['mascon']['lat_center']))
+		gsfc_area = np.squeeze(np.array(f['mascon']['area_km2']))
+		gsfc_y,gsfc_doy,tdec['gsfc'] = np.array(f['time']['yyyy_doy_yrplot_middle'])
+		#-- initialize mass timeseries
+		mass['gsfc'] = np.zeros(len(tdec['gsfc']))
+		for i in range(N):
+			#-- count mascon if it's center is in polygon
+			if poly_sum.contains(Point(gsfc_lons[i],gsfc_lats[i])):
+				#-- convert cmWE * km^2 * 10^10 to get grams, then divide by 10^15 convert to Gt
+				#-- which is equivalent to dividing by 10^5
+				mass['gsfc'] += (gsfc_mass[i,:]*gsfc_area[i])/1e5
+		f.close()
+
+		#-- write GSFC timeseris to file
+		fid = open(gsfc_ts_file,'w')
+		fid.write('Decimal-Years   Mass(Gt)\n')
+		for t in range(len(tdec['gsfc'])):
+			fid.write('{0:.4f}  {1:.4f}\n'.format(tdec['gsfc'][t],mass['gsfc'][t]))
+		fid.close()
+
+	#----------------------------------------------------------------------
+	#-- Perform regression for common period
+	#----------------------------------------------------------------------
+	#-- list of solution keys
+	sols = tdec.keys()
+	#-- get min and max time
+	tmin = np.max([np.min(tdec[s]) for s in sols])
+	tmax = np.min([np.max(tdec[s]) for s in sols])
+	com_lbl = '{0:.1f}-{1:.1f}'.format(tmin,tmax)
+	#-- get indices of common period
+	ind = {}
+	for s in sols:
+		ind[s] = np.squeeze(np.nonzero(
+					(tdec[s] > tmin) &
+					(tdec[s] < tmax)
+					))
+	
+	df = {}
+	for s in sols:
+		df[s] = {}
+		fit = tsregress(tdec[s][ind[s]],mass[s][ind[s]],ORDER=1,CYCLES=[0.5,1])
+		df[s]['Trend ({0}) Gt/yr'.format(com_lbl)] = fit['beta'][1]
+		df[s]['Trend Err ({0}) Gt/yr'.format(com_lbl)] = fit['error'][1]
+		df[s]['Seasonal ({0}) Gt'.format(com_lbl)] = np.sqrt(fit['beta'][4]**2 + fit['beta'][5]**2)
+		df[s]['Seasonal Err ({0}) Gt'.format(com_lbl)] = np.sqrt(fit['error'][4]**2 + fit['error'][5]**2)
+		#-- also get trend for 2015 onwards
+		ind15 = np.squeeze(np.nonzero(tdec[s]>2015))
+		fit = tsregress(tdec[s][ind15],mass[s][ind15],ORDER=1,CYCLES=[0.5,1])
+		df[s]['Trend (2015+) Gt/yr'.format(com_lbl)] = fit['beta'][1]
+		df[s]['Trend Err (2015+) Gt/yr'.format(com_lbl)] = fit['error'][1]
+
+	#-- write regression results to file
+	df = pd.DataFrame(df)
+	df.to_csv(mscn_file.replace('.txt','_comparison_regession.csv'))
 
 	#----------------------------------------------------------------------
 	#-- Plot Comparison
 	#----------------------------------------------------------------------
 	fig = plt.figure(1,figsize=(9,6))
-	plt.plot(vr_tdec,vr_mass,color='k',label='Voronoi Mascons',zorder=1)
-	plt.plot(jpl_tdec,jpl_ts,color='red',label='JPL Mascons',zorder=2)
-	plt.plot(gsfc_tdec,gsfc_ts,color='cyan',label='GSFC Mascons',zorder=3)
+	plt.plot(tdec['vor'],mass['vor'],color='k',label='Voronoi Mascons',zorder=1)
+	plt.plot(tdec['jpl'],mass['jpl'],color='red',label='JPL Mascons',zorder=2)
+	plt.plot(tdec['gsfc'],mass['gsfc'],color='cyan',label='GSFC Mascons',zorder=3)
 	plt.axvspan(2017.5, 2018.37, color='lightgray',zorder=4)
 	plt.legend()
 	plt.xlabel('Time [Decimal Year]')
