@@ -59,14 +59,14 @@ def plot_html(new_centroids,new_sv,ind,ddir):
 				#-- make line on sphere
 				pl = pygplates.PolylineOnSphere(list(zip(lats,lons)))
 				xyz = pl.to_xyz_array()
-				cline = go.Scatter3d(x=xyz[:,0],y=xyz[:,1],z=xyz[:,2],mode='lines',line={'width': 2,'color': 'green'},name='Land',showlegend=False)
+				cline = go.Scatter3d(x=xyz[:,0],y=xyz[:,1],z=xyz[:,2],mode='lines',line={'width': 3,'color': 'green'},name='Land',showlegend=False)
 				data.append(cline)
 		else:
 			lons,lats = world['geometry'][i].exterior.coords.xy
 			#-- make line on sphere
 			pl = pygplates.PolylineOnSphere(list(zip(lats,lons)))
 			xyz = pl.to_xyz_array()
-			cline = go.Scatter3d(x=xyz[:,0],y=xyz[:,1],z=xyz[:,2],mode='lines',line={'width': 2,'color': 'green'},name='Land',showlegend=False)
+			cline = go.Scatter3d(x=xyz[:,0],y=xyz[:,1],z=xyz[:,2],mode='lines',line={'width': 3,'color': 'green'},name='Land',showlegend=False)
 			data.append(cline)
 
 	#-- configure layout
