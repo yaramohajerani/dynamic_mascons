@@ -96,6 +96,10 @@ def compare_timeseries(parameters):
 		jpl_time_var = fid.variables['time']
 		jpl_dtime = nc.num2date(jpl_time_var[:],jpl_time_var.units)
 		fid.close()
+
+		#-- shift lons from 0 to 360 to -180 to 180
+		ind_lon = np.where(jpl_lons > 180)
+		jpl_lons[ind_lon] -= 360
 		
 		#-- get grid increments for area calculation later on
 		dth = np.radians(np.abs(jpl_lats[1] - jpl_lats[0]))
@@ -162,12 +166,16 @@ def compare_timeseries(parameters):
 		gsfc_lons = np.squeeze(np.array(f['mascon']['lon_center']))
 		gsfc_lats = np.squeeze(np.array(f['mascon']['lat_center']))
 		gsfc_area = np.squeeze(np.array(f['mascon']['area_km2']))
+		gsfc_locs = np.squeeze(np.array(f['mascon']['location']))
 		gsfc_y,gsfc_doy,tdec['gsfc'] = np.array(f['time']['yyyy_doy_yrplot_middle'])
+		#-- shift lons from 0 to 360 to -180 to 180
+		ind_lon = np.where(gsfc_lons > 180)
+		gsfc_lons[ind_lon] -= 360
 		#-- initialize mass timeseries
 		mass['gsfc'] = np.zeros(len(tdec['gsfc']))
 		for i in range(N):
 			#-- count mascon if it's center is in polygon
-			if poly_sum.contains(Point(gsfc_lons[i],gsfc_lats[i])):
+			if (gsfc_locs[i] != 90 and poly_sum.contains(Point(gsfc_lons[i],gsfc_lats[i]))):
 				#-- convert cmWE * km^2 * 10^10 to get grams, then divide by 10^15 convert to Gt
 				#-- which is equivalent to dividing by 10^5
 				mass['gsfc'] += (gsfc_mass[i,:]*gsfc_area[i])/1e5
@@ -196,6 +204,8 @@ def compare_timeseries(parameters):
 					(tdec[s] > tmin) &
 					(tdec[s] < tmax)
 					))
+		#-- remove common mean
+		mass[s] -= np.mean(mass[s][ind[s]])
 	
 	df = {}
 	for s in sols:
