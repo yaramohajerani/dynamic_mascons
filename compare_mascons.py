@@ -11,7 +11,6 @@ import os
 import sys
 import getopt
 import pickle
-import copy
 from matplotlib.patches import Polygon
 import numpy as np
 import geopandas as gpd
@@ -57,8 +56,11 @@ def compare_mascons(parameters,jpl,gsfc):
 	#----------------------------------------------------------------------
 	rgi_dir = os.path.expanduser(parameters['RGI_DIR'])
 	rgi = {}
-	for key,num,name in zip(['c','w','e'],[13,14,15],['CentralAsia','SouthAsiaWest','SouthAsiaEast']):
-		rgi[key] = gpd.read_file(os.path.join(rgi_dir,'{0:d}_rgi60_{1}'.format(num,name),'{0:d}_rgi60_{1}.shp'.format(num,name)))
+	if 'alaska' in mascon_name:
+		rgi['a'] = gpd.read_file(os.path.join(rgi_dir,'01_rgi60_Alaska','01_rgi60_Alaska.shp'))
+	else:
+		for key,num,name in zip(['c','w','e'],[13,14,15],['CentralAsia','SouthAsiaWest','SouthAsiaEast']):
+			rgi[key] = gpd.read_file(os.path.join(rgi_dir,'{0:d}_rgi60_{1}'.format(num,name),'{0:d}_rgi60_{1}.shp'.format(num,name)))
 
 	#----------------------------------------------------------------------
 	#-- Make plot of mascon polygons
@@ -69,7 +71,7 @@ def compare_mascons(parameters,jpl,gsfc):
 	world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
 	world.plot(ax=ax,fc='none',ec='black',linewidth=1.5,rasterized=True)
 	#-- add RGI polygons
-	for r in ['c','w','e']:
+	for r in rgi.keys():
 		rgi[r].plot(ax=ax,alpha=0.8,fc='indigo',ec='indigo',rasterized=True)
 	polys = []
 	#-- plot regions
