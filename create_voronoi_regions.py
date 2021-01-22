@@ -47,7 +47,7 @@ def plot_html(new_centroids,new_sv,ind,ddir):
 			start = new_sv.vertices[region][i]
 			end = new_sv.vertices[region][(i + 1) % n]
 			result = np.array(geometric_slerp(start, end, t))
-			edge = go.Scatter3d(x=result[..., 0],y=result[..., 1],z=result[..., 2],mode='lines',line={'width': 1,'color': 'black'},name='region edge',showlegend=False)
+			edge = go.Scatter3d(x=result[..., 0],y=result[..., 1],z=result[..., 2],mode='lines',line={'width': 1.5,'color': 'black'},name='region edge',showlegend=False)
 			data.append(edge)
 
 	#-- also plot world map
@@ -59,23 +59,24 @@ def plot_html(new_centroids,new_sv,ind,ddir):
 				#-- make line on sphere
 				pl = pygplates.PolylineOnSphere(list(zip(lats,lons)))
 				xyz = pl.to_xyz_array()
-				cline = go.Scatter3d(x=xyz[:,0],y=xyz[:,1],z=xyz[:,2],mode='lines',line={'width': 3,'color': 'green'},name='Land',showlegend=False)
+				cline = go.Scatter3d(x=xyz[:,0],y=xyz[:,1],z=xyz[:,2],mode='lines',line={'width': 2.5,'color': 'green'},name='Land',showlegend=False)
 				data.append(cline)
 		else:
 			lons,lats = world['geometry'][i].exterior.coords.xy
 			#-- make line on sphere
 			pl = pygplates.PolylineOnSphere(list(zip(lats,lons)))
 			xyz = pl.to_xyz_array()
-			cline = go.Scatter3d(x=xyz[:,0],y=xyz[:,1],z=xyz[:,2],mode='lines',line={'width': 3,'color': 'green'},name='Land',showlegend=False)
+			cline = go.Scatter3d(x=xyz[:,0],y=xyz[:,1],z=xyz[:,2],mode='lines',line={'width': 2.5,'color': 'green'},name='Land',showlegend=False)
 			data.append(cline)
 
 	#-- configure layout
-	layout = go.Layout(margin={'l': 0, 'r': 0, 'b': 0, 't': 0},title={
-			'text': "Final Generator Setup",
-			'y':0.9,
-			'x':0.5,
-			'xanchor': 'center',
-			'yanchor': 'top'})
+	layout = go.Layout(margin={'l': 0, 'r': 0, 'b': 0, 't': 0})
+	# layout = go.Layout(margin={'l': 0, 'r': 0, 'b': 0, 't': 0},title={
+	# 		'text': "Final Generator Setup",
+	# 		'y':0.9,
+	# 		'x':0.5,
+	# 		'xanchor': 'center',
+	# 		'yanchor': 'top'})
 
 	fig = go.Figure(data=data, layout=layout)
 	
