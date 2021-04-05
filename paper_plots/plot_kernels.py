@@ -37,9 +37,11 @@ for i,r in enumerate(regs):
 			format(r,c)),DATE=False,ATTRIBUTES=False,TITLE=False)
 		#-- plot kernel
 		glon,glat = np.meshgrid(kern['lon'],kern['lat'])
-		levels = np.linspace(-1.6, 1.6, 17)
-		p = ax[i,j].contourf(glon,glat,kern['data'],cmap='RdBu',levels=levels,extend='both')
-		# p = ax[i,j].pcolormesh(glon,glat,kern['data'],cmap='RdBu',vmin=-1.6,vmax=1.6)
+		p = ax[i,j].pcolormesh(glon,glat,kern['data'],cmap='RdYlBu',vmin=-1.6,vmax=1.6,shading='auto',rasterized=True)
+		# levels = [-1.5,-1,-0.5,-0.2,0,0.2,0.5,0.8,1,1.5]	#np.linspace(-1.6, 1.6, 17)
+		# p = ax[i,j].contourf(glon,glat,kern['data'],levels,cmap='RdBu',extend='both')
+		cs = ax[i,j].contour(glon,glat,kern['data'],[1.],colors='lime')#,cmap='RdBu',extend='both')
+		ax[i,j].clabel(cs, inline=True,fontsize=5,inline_spacing=0)
 		#-- use an axis divider for the colorbar
 		drx = make_axes_locatable(ax[i,j])
 		cax = drx.append_axes("right", size="5%", pad=0.1)
