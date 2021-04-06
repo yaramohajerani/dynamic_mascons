@@ -97,13 +97,9 @@ def calc_leakage(parameters):
 	#-- save difference to file
 	ncdf_write(diff,lons,lats,0,FILENAME=diff_file,DATE=False,UNITS='unitless',LONGNAME='Sensitivity_Kernel_DIFFERENCE')
 
-	#-- Before calculating error, threshold for noise
-	diff[np.abs(diff)<0.05] = 0
-	print('Difference RMS: ', np.sqrt(np.sum(diff**2)))
-	print('Sum difference ', np.sum(diff))
-	print('Sum difference / sum harm', np.sum(diff)/np.sum(harm_sum))
-	print('Mean kern/harm: ', np.mean(kern/harm_sum))
-	print('Mean difference/harm: ', np.mean(diff/harm_sum))
+	#-- calculate Mean Percent Error (https://en.wikipedia.org/wiki/Mean_percentage_error)
+	percent_error = np.abs(diff/harm_sum)
+	print("Mean Percentage Error: {0:.2f}".format(np.mean(percent_error)))
 
 #------------------------------------------------------------------------------
 #-- main function
