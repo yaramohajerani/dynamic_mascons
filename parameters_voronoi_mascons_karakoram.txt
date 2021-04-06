@@ -1,5 +1,5 @@
-N_ITERATIONS	55
-R_CONSTANT	0.02
+N_ITERATIONS	50
+R_CONSTANT	0.025
 VORONOI_FILE	~/dynamic_mascons/data/karakoram/sv_obj
 COORD_FILE	~/dynamic_mascons/data/karakoram/fixed_points_sample.csv 
 DDEG_RASTER	0.25
@@ -9,7 +9,7 @@ MMAX	60
 LMIN	0
 LOVE_FILE	~/read-GRACE-harmonics/gravity_toolkit/data/love_numbers
 HARMONIC_DIRECTORY	~/dynamic_mascons/data/karakoram/harmonics
-EPSILON	0.40
+EPSILON	0.35
 MAKE_HARMONICS	Y
 MAKE_SPATIAL	Y
 RAD	250
@@ -23,10 +23,10 @@ MASCON_INDEX	~/dynamic_mascons/data/karakoram/harmonics/mascon_Ylms_index_L60_0.
 DIRECTORY	~/dynamic_mascons/data/karakoram/MSCNS
 #MSCN_NUMS	0,18,21,30
 #MSCN_NAME   karakoram
-#MSCN_NUMS  0,3,30
-#MSCN_NAME   karakoram_SE
-MSCN_NUMS	9,18,20,27
-MSCN_NAME	karakoram_NW
+MSCN_NUMS  0,30
+MSCN_NAME   karakoram_SE
+#MSCN_NUMS	18,21
+#MSCN_NAME	karakoram_NW
 PROC	JPL
 DREL		RL06	
 DSET		GSM	
