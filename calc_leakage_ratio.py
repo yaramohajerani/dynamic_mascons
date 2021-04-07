@@ -98,9 +98,19 @@ def calc_leakage(parameters):
 	ncdf_write(diff,lons,lats,0,FILENAME=diff_file,DATE=False,UNITS='unitless',LONGNAME='Sensitivity_Kernel_DIFFERENCE')
 
 	#-- calculate Mean Percent Error (https://en.wikipedia.org/wiki/Mean_percentage_error)
-	percent_error = np.abs(diff/harm_sum)
-	print("Mean Percentage Error: {0:.2f}".format(np.mean(percent_error)))
+	#- first calculate a map of percent errors
+	percent_error = np.abs(diff/harm_sum) * 100
+	#-- calculate area-weighted mean
+	th_grid = (90.0 - glat)*np.pi/180.0
+	area_scale = np.sin(th_grid)
+	mpe = np.abs(np.sum(area_scale*percent_error)/np.sum(area_scale))
+	print("Mean Percentage Error: {0:.1f}".format(mpe))
 
+	#-- calculate mean ratio
+	ratio = kern/harm_sum * 100
+	mean_ratio = np.sum(area_scale*ratio)/np.sum(area_scale)
+	print("Mean Ratio: {0:.1f}".format(mean_ratio))
+	
 #------------------------------------------------------------------------------
 #-- main function
 #------------------------------------------------------------------------------
