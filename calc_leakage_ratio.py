@@ -109,8 +109,12 @@ def calc_leakage(parameters):
 	#-- calculate mean ratio
 	ratio = kern/harm_sum * 100
 	mean_ratio = np.sum(area_scale*ratio)/np.sum(area_scale)
-	print("Mean Ratio: {0:.1f}".format(mean_ratio))
-	
+	print("Mean Ratio (%): {0:.1f}".format(mean_ratio))
+
+	#-- ratio of sum(sigma*A)/sum(sigma)
+	mass_ratio = np.sum(harm_sum*kern*area_scale)/np.sum(harm_sum*area_scale) * 100
+	print("Mass Ratio (%): {0:.2f}".format(mass_ratio))
+
 #------------------------------------------------------------------------------
 #-- main function
 #------------------------------------------------------------------------------
