@@ -23,10 +23,10 @@ MASCON_INDEX	~/dynamic_mascons/data/alaska/harmonics/mascon_Ylms_index_L60_0.25d
 DIRECTORY	~/dynamic_mascons/data/alaska/MSCNS
 #MSCN_NUMS  0,42,170
 #MSCN_NAME   alaska
-MSCN_NUMS  0
-MSCN_NAME   alaska_west
-#MSCN_NUMS  42,43,163,170
-#MSCN_NAME   alaska_east
+#MSCN_NUMS  0
+#MSCN_NAME   alaska_west
+MSCN_NUMS  42,43,163,170
+MSCN_NAME   alaska_east
 PROC	JPL
 DREL		RL06	
 DSET		GSM	

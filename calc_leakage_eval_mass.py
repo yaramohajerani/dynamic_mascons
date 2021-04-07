@@ -56,12 +56,14 @@ def calc_leakage(parameters):
 		nums.append(n)
 
 	#-- read kernels 
-	kern = {}
-	for n in nums:
+	kern = {'clm':np.zeros((LMAX+1,MMAX+1)),'slm':np.zeros((LMAX+1,MMAX+1))}
+	for m in mascon_nums:
 		kern_file = os.path.join(os.path.expanduser(parameters['DIRECTORY']),\
 			'MASCON_{0}_YLMS_{1:.2f}DEG_SKERNEL_CLM{2}_L{3:d}_r{4:d}km.nc'\
 			.format(n,DDEG_RASTER,OCN,LMAX,RAD))
-		kern[n] = ncdf_read_stokes(kern_file,DATE=False,ATTRIBUTES=False)
+		kern_m = ncdf_read_stokes(kern_file,DATE=False,ATTRIBUTES=False)
+		kern['clm'] += kern_m['clm'][:,:]
+		kern['slm'] += kern_m['slm'][:,:]
 	
 	#-- convert harmonics to mass unit before spatial conversion
 	#-- Average Density of the Earth [g/cm^3]
@@ -71,22 +73,21 @@ def calc_leakage(parameters):
 	l = np.arange(0,LMAX+1)
 	dfactor = rho_e*rad_e*(2.0*l+1.0)/(1.0 +kl[l])/3.0
 	for m in range(MMAX+1):
-		kern[m]['clm'][:,m] *= dfactor
-		kern[m]['slm'][:,m] *= dfactor
+		kern['clm'][:,m] *= dfactor
+		kern['slm'][:,m] *= dfactor
 
 	#-- outside 
 	inside = 0
 	outside = 0
-	for m in mascon_nums:
-		for n in nums:
-			if n not in mascon_nums:
-				outside += np.sum(kern[m]['clm'][:,:]*Ylms[n]['clm'][:,:] + kern[m]['slm'][:,:]*Ylms[n]['slm'][:,:])
-			else:
-				inside += np.sum(kern[m]['clm'][:,:]*Ylms[n]['clm'][:,:] + kern[m]['slm'][:,:]*Ylms[n]['slm'][:,:])
+	for n in nums:
+		if n in mascon_nums:
+			inside += np.sum(kern['clm'][:,:]*Ylms[n]['clm'][:,:] + kern['slm'][:,:]*Ylms[n]['slm'][:,:])
+		else:
+			outside += np.sum(kern['clm'][:,:]*Ylms[n]['clm'][:,:] + kern['slm'][:,:]*Ylms[n]['slm'][:,:])
 	
 	print('inside: ',inside)
 	print('outside: ',outside)
-	print('ratio: ', np.abs(outside/inside) * 100)
+	print('percent ratio: ', np.abs(outside/inside) * 100)
 	
 #------------------------------------------------------------------------------
 #-- main function
