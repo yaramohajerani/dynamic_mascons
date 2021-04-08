@@ -2,7 +2,7 @@
 u"""
 plot_harmonics.py
 by Yara Mohajerani
-01/2021
+Last Update 04/2021
 
 Simple script for plotting the 
 harmonic representation of given regions.
@@ -56,12 +56,12 @@ for m in range(0,MMAX+1):#-- MMAX+1 to include MMAX
         plm[l,m,:] = plm[l,m,:]*dfactor[l]
 
 fig, ax = plt.subplots(len(regs),1,figsize = (8,10),sharey=True)#, dpi=100)
-for i,(r,k) in enumerate(zip(regs,[70,85,40])):
+for i,(r,v,k) in enumerate(zip(regs,[0,0,42],[70,85,40])):
 	#-- First load the saved SphericalVoronoi object
 	with open(os.path.join(base_dir,r,'sv_obj'), 'rb') as in_file:
 		sv = pickle.load(in_file)
 	#-- read harmonics
-	m1 = ncdf_read_stokes(os.path.join(base_dir,r,'harmonics','mascon_0_Ylms_L60_0.25deg.nc'),DATE=False,ATTRIBUTES=False)
+	m1 = ncdf_read_stokes(os.path.join(base_dir,r,'harmonics','mascon_{0:d}_Ylms_L60_0.25deg.nc'.format(v)),DATE=False,ATTRIBUTES=False)
 	m2 = ncdf_read_stokes(os.path.join(base_dir,r,'harmonics','mascon_{0:d}_Ylms_L60_0.25deg.nc'.format(k)),DATE=False,ATTRIBUTES=False)
 	#-- calculate the spatial representation of the harmonics
 	sp1 = harmonic_summation(m1['clm'],m1['slm'],lons,lats,LMAX=LMAX,MMAX=MMAX,PLM=plm)
@@ -77,7 +77,7 @@ for i,(r,k) in enumerate(zip(regs,[70,85,40])):
 	world.plot(ax=ax[i],alpha=0.3,fc='none',ec='k',linewidth=1.2,rasterized=True)
 	
 	#-- also plot the origina polygon
-	region = sv.regions[0]
+	region = sv.regions[v]
 	n = len(region)
 	t = np.linspace(0,1,10)
 	for j in range(n):
