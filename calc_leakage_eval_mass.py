@@ -89,14 +89,13 @@ def calc_leakage(parameters):
 
 	#-- save to file
 	outfile = os.path.join(os.path.expanduser(parameters['DIRECTORY']),\
-			'MASCON_{0}_LEAKAGE_ERROR_{1:.2f}DEG_SKERNEL_CLM{2}_L{3:d}_r{4:d}km.csv'\
+			'MASCON_{0}_LEAKAGE_ERROR_{1:.2f}DEG_SKERNEL{2}_L{3:d}_r{4:d}km.csv'\
 			.format(lbl,DDEG_RASTER,OCN,LMAX,RAD))
 	fid = open(outfile,'w')
-	fid.write('inside,{0:.2E}\n'.format(inside))
-	fid.write('outside,{0:.2E}\n'.format(outside))
-	fid.write('leakage,{0:.1f}'.format(leakage))
+	fid.write('region,inside,outside,leakage\n')
+	fid.write('{0},{1:.2E},{2:.2E},{3:.1f}'.format(lbl,inside,outside,leakage))
 	fid.close()
-	
+
 	#-- also display results
 	print('inside: {0:.2E}, outside: {1:.2E}'.format(inside,outside))
 	print('{0} Leakage ratio (%): {1:.1f}'.format(lbl,leakage))

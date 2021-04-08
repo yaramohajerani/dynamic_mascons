@@ -67,6 +67,7 @@ def compare_timeseries(parameters):
 	#-- create dictionaries for time and mass
 	tdec = {}
 	mass = {}
+	errs = {}
 	#----------------------------------------------------------------------
 	#-- Read the customized mascon timeseries
 	#----------------------------------------------------------------------
@@ -74,6 +75,11 @@ def compare_timeseries(parameters):
 	ts = np.loadtxt(mscn_file)
 	tdec['vor'] = ts[:,1]
 	mass['vor'] = ts[:,2]
+	errs['vor'] = ts[:,3]
+	#-- also read leakage error
+	leak_file = os.path.join(ddir,'MASCON_{0}_LEAKAGE_ERROR_{1:.2f}DEG_SKERNEL{2}_L{3:d}_r{4:d}km.csv'.format(lbl,DDEG_RASTER,OCN,LMAX,RAD))
+	df_leak = pd.read_csv(leak_file)
+	leak_err = float(df_leak['leakage'])
 
 	#----------------------------------------------------------------------
 	#-- Get Corresponding JPL Mascons
@@ -225,11 +231,15 @@ def compare_timeseries(parameters):
 	df = pd.DataFrame(df)
 	df.to_csv(mscn_file.replace('.txt','_comparison_regession.csv'))
 
+	#-- calculate error timeseries for the voronoi timeseries
+	err_line = np.sqrt(errs['vor']**2 + (0.01*leak_err*mass['vor'])**2)
 	#----------------------------------------------------------------------
 	#-- Plot Comparison
 	#----------------------------------------------------------------------
 	fig = plt.figure(1,figsize=(9,6))
 	plt.plot(tdec['vor'],mass['vor'],color='k',label='Voronoi Mascons',zorder=1)
+	plt.fill_between(tdec['vor'],mass['vor']-err_line,y2=mass['vor']+err_line,
+					alpha=0.2,color='k',zorder=1)
 	plt.plot(tdec['jpl'],mass['jpl'],color='red',label='JPL Mascons',zorder=2)
 	plt.plot(tdec['gsfc'],mass['gsfc'],color='cyan',label='GSFC Mascons',zorder=3)
 	plt.axvspan(2017.5, 2018.37, color='lightgray',zorder=4)
