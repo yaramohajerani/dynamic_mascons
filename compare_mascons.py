@@ -69,10 +69,10 @@ def compare_mascons(parameters,jpl,gsfc):
 	#-- plot continents 
 	#-- load in world map for plotting in background
 	world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
-	world.plot(ax=ax,fc='none',ec='black',linewidth=1.5,rasterized=True)
+	world.plot(ax=ax,fc='none',ec='black',linewidth=1.4,rasterized=True)
 	#-- add RGI polygons
 	for r in rgi.keys():
-		rgi[r].plot(ax=ax,alpha=0.8,fc='indigo',ec='indigo',rasterized=True)
+		rgi[r].plot(ax=ax,alpha=0.3,fc='darkkhaki',ec='darkkhaki',rasterized=True)
 	polys = []
 	#-- plot regions
 	for i,region in enumerate(sv.regions):
@@ -90,7 +90,7 @@ def compare_mascons(parameters,jpl,gsfc):
 				for v in range(len(edge)):
 					edge_lats[v],edge_lons[v] = pygplates.PointOnSphere(edge[v]).to_lat_lon()
 				#-- plot the polygon edges
-				ax.plot(edge_lons,edge_lats,color='limegreen',linewidth=1.)
+				ax.plot(edge_lons,edge_lats,color='limegreen',linewidth=1.,alpha=0.6)
 			if i in mascon_nums:
 				lon_list = np.zeros(n)
 				lat_list = np.zeros(n)
@@ -98,12 +98,12 @@ def compare_mascons(parameters,jpl,gsfc):
 					lat_list[v],lon_list[v] = pygplates.PointOnSphere(sv.vertices[region][v]).to_lat_lon()
 				polys.append(Polygon(list(zip(lon_list,lat_list))))
 			#-- if not plotting other mascon solutions, add numbers
-			# if (not jpl) and (not gsfc):
-			cnt_lat,cnt_lon = pygplates.PointOnSphere(sv.points[i]).to_lat_lon()
-			shift = int(np.log10(i))/2 if (i > 0) else 0
-			cnt_lon -= shift
-			cnt_lat -= 0.5
-			ax.text(cnt_lon,cnt_lat,i,fontsize=10,color='red',weight='bold')
+			if not (jpl and gsfc):
+				cnt_lat,cnt_lon = pygplates.PointOnSphere(sv.points[i]).to_lat_lon()
+				shift = int(np.log10(i))/2 if (i > 0) else 0
+				cnt_lon -= shift
+				cnt_lat -= 0.5
+				ax.text(cnt_lon,cnt_lat,i,fontsize=10,color='red',weight='bold')
 	#-- combine the polygons for the fixed points
 	for i,p in enumerate(polys):
 		print("Polygon {0}: area = {1}".format(i,p.area))
@@ -124,7 +124,7 @@ def compare_mascons(parameters,jpl,gsfc):
 			# if poly_sum.intersects(jpl_gdf['geometry'][i]):
 			if poly_sum.intersection(jpl_gdf['geometry'][i]).area > jpl_gdf['geometry'][i].area/4:
 				print("Including JPL Mascon #:",i)
-				patch = PolygonPatch(jpl_gdf['geometry'][i],ec='darkred',fc='red',alpha=0.3,zorder=3)
+				patch = PolygonPatch(jpl_gdf['geometry'][i],ec='blue',fc='dodgerblue',linewidth=1.5,alpha=0.3,zorder=3)
 				jplpatch = ax.add_patch(patch)
 		lgd_items.append(jplpatch)
 		lgd_lbls.append('JPL Mascons')
@@ -139,7 +139,7 @@ def compare_mascons(parameters,jpl,gsfc):
 			# if poly_sum.intersects(gsfc_gdf['geometry'][i]):
 			if poly_sum.intersection(gsfc_gdf['geometry'][i]).area > gsfc_gdf['geometry'][i].area/2:
 				print("Including GSFC Mascon #:",i)
-				patch = PolygonPatch(gsfc_gdf['geometry'][i],ec='darkred',fc='red',alpha=0.3,zorder=4)
+				patch = PolygonPatch(gsfc_gdf['geometry'][i],ec='darkred',fc='red',linewidth=1.5,alpha=0.2,zorder=4)
 				gsfcpatch = ax.add_patch(patch)
 		lgd_items.append(gsfcpatch)
 		lgd_lbls.append('GSFC Mascons')

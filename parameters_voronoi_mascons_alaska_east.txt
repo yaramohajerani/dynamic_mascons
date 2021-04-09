@@ -53,5 +53,5 @@ JPL_LANDMASK	~/data.dir/mascons.dir/JPL.dir/RL06M.dir/CRI/LAND_MASK.CRI.nc
 GSFC_INPUT  ~/data.dir/mascons.dir/Goddard.dir/GSFC.glb.200301_201607_v02.4-ICE6G.hdf
 GSFC_MSCNS  ~/data.dir/mascons.dir/Goddard.dir/mascon_grid.dir/goddard_1degree_mascon_grid.shp 
 RGI_DIR ~/data.dir/RGI
-LAT_LIMITS  51,72
-LON_LIMITS  -169,-126   	
+LAT_LIMITS  50,71
+LON_LIMITS  -166.5,-126   	

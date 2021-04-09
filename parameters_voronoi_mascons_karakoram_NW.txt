@@ -47,11 +47,11 @@ DESTRIPE		Y
 MEAN_FILE		None
 #PARAMETERS FOR COMPARISON
 JPL_INPUT   ~/data.dir/mascons.dir/JPL.dir/RL06M.dir/CRI/GRCTellus.JPL.200204_202010.GLO.RL06M.MSCNv02CRI.nc
-JPL_MSCNS   ~/data.dir/mascons.dir/JPL.dir/JPL_MASCON_mask/JPL_MSCN_3deg_grid/JPL_MSCN_3deg_grid.shp 
+JPL_MSCNS   ~/data.dir/mascons.dir/JPL.dir/JPL_MASCON_mask/jpl_shfted_mask.dir/JPL_MSCN_3deg_grid.shp
 #JPL_MSCNS	~/data.dir/mascons.dir/JPL.dir/RL06M.dir/CRI/JPL_MSCNv02_PLACEMENT.nc 
 JPL_LANDMASK	~/data.dir/mascons.dir/JPL.dir/RL06M.dir/CRI/LAND_MASK.CRI.nc
 GSFC_INPUT  ~/data.dir/mascons.dir/Goddard.dir/GSFC.glb.200301_201607_v02.4-ICE6G.hdf
 GSFC_MSCNS  ~/data.dir/mascons.dir/Goddard.dir/mascon_grid.dir/goddard_1degree_mascon_grid.shp 
 RGI_DIR ~/data.dir/RGI
-LAT_LIMITS  22,47
-LON_LIMITS  62,105   	
+LAT_LIMITS  25,45
+LON_LIMITS  65,100  
