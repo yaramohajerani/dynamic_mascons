@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 u"""
-compare_timeseries.py
+plot_timeseries_comparisons.py
 by Yara Mohajerani
 
 Compare timeseries of different mascon solutions
@@ -24,10 +24,28 @@ from gravity_toolkit.tsregress import tsregress
 
 rad_e = 6.371e8  # -- Average Radius of the Earth [cm]
 
-#------------------------------------------------------------------------------
-#-- compare mascon solutions
-#------------------------------------------------------------------------------
-def compare_timeseries(parameters):
+regions = ['karakoram_NW','karakoram_SE','nyainqentangla','alaska_east']
+
+#-- initialize figure
+fig, axs = plt.subplots(2,2,figsize = (10,6))
+
+#-- loop over regions and plot each
+for count,reg in enumerate(regions):
+	print(reg)
+	#-- set up axis for figure
+	axi = int(count/2) # row number
+	axj = count%2	# column number
+	ax = axs[axi,axj]
+
+	param_file = os.path.join(os.getcwd(),'..','parameters_voronoi_mascons_{0}.txt'.format(reg))
+	parameters = {}
+	#-- for each paramter file, extract parameters
+	fid = open(param_file, 'r')
+	for fileline in fid:
+		part = fileline.split()
+		parameters[part[0]] = part[1]
+	fid.close()
+
 	#-- input file for voronoi regions
 	input_file = os.path.expanduser(parameters['VORONOI_FILE'])
 	with open(input_file, 'rb') as in_file:
@@ -232,7 +250,7 @@ def compare_timeseries(parameters):
 					))
 		#-- remove common mean
 		mass[s] -= np.mean(mass[s][ind[s]])
-	
+	"""
 	df = {}
 	for s in sols:
 		df[s] = {}
@@ -250,56 +268,41 @@ def compare_timeseries(parameters):
 	#-- write regression results to file
 	df = pd.DataFrame(df)
 	df.to_csv(mscn_file.replace('.txt','_comparison_regession.csv'))
-
+	"""
 	#-- calculate error timeseries for the voronoi timeseries
 	err_line = np.sqrt(errs['vor']**2 + (0.01*leak_err*mass['vor'])**2)
 	#----------------------------------------------------------------------
 	#-- Plot Comparison
 	#----------------------------------------------------------------------
-	fig = plt.figure(1,figsize=(9,6))
 	#-- plot voronoi mascons
-	plt.plot(tdec['vor'],mass['vor'],color='k',label='Voronoi Mascons',zorder=1)
-	plt.fill_between(tdec['vor'],mass['vor']-err_line,y2=mass['vor']+err_line,
+	ax.plot(tdec['vor'],mass['vor'],color='k',zorder=1)
+	ax.fill_between(tdec['vor'],mass['vor']-err_line,y2=mass['vor']+err_line,
 					alpha=0.2,color='k',zorder=1)
 	#-- plot JPL mascons
-	plt.plot(tdec['jpl'],mass['jpl'],color='red',label='JPL Mascons',zorder=2)
-	plt.fill_between(tdec['jpl'],mass['jpl']-errs['jpl'],y2=mass['jpl']+errs['jpl'],
+	ax.plot(tdec['jpl'],mass['jpl'],color='red',zorder=2)
+	ax.fill_between(tdec['jpl'],mass['jpl']-errs['jpl'],y2=mass['jpl']+errs['jpl'],
 					alpha=0.35,color='red',zorder=2)
 	#-- plot GSFC mascons
-	plt.plot(tdec['gsfc'],mass['gsfc'],color='cyan',label='GSFC Mascons',zorder=3)
-	plt.fill_between(tdec['gsfc'],mass['gsfc']-errs['gsfc'],y2=mass['gsfc']+errs['gsfc'],
+	ax.plot(tdec['gsfc'],mass['gsfc'],color='cyan',zorder=3)
+	ax.fill_between(tdec['gsfc'],mass['gsfc']-errs['gsfc'],y2=mass['gsfc']+errs['gsfc'],
 					alpha=0.35,color='cyan',zorder=3)
-	plt.axvspan(2017.5, 2018.37, color='palegoldenrod',zorder=4)
-	plt.legend()
-	plt.xlabel('Time [Decimal Year]')
-	plt.ylabel('Mass [Gt]')
-	plt.title('Comparing Mass Balance Time-Series for Mascons {0} ({1})'.format(\
-		parameters['MSCN_NUMS'].replace(',','+'),mascon_name.replace('_',' ')))
-	plt.savefig(mscn_file.replace('.txt','_comparison.pdf'),format='PDF')
-	plt.close(fig)
-	
-#------------------------------------------------------------------------------
-#-- main function
-#------------------------------------------------------------------------------
-def main():
-	if len(sys.argv) == 1:
-		sys.exit('No paramter file given')
-	else:
-		#-- read input files
-		input_files = sys.argv[1:]
-		parameters = {}
-		for infile in input_files:
-			#-- for each paramter file, extract parameters
-			fid = open(infile, 'r')
-			for fileline in fid:
-				part = fileline.split()
-				parameters[part[0]] = part[1]
-			fid.close()
-			#-- feed parameters to function to compare mascon solutions
-			compare_timeseries(parameters)
+	ax.axvspan(2017.5, 2018.37, color='palegoldenrod',zorder=4)
 
-#------------------------------------------------------------------------------
-#-- run main program
-#------------------------------------------------------------------------------
-if __name__ == '__main__':
-	main()
+	if axi == 1:
+		ax.set_xlabel('Time [Decimal Year]')
+	if axj == 0:
+		ax.set_ylabel('Mass [Gt]')
+	#-- add title and labels
+	ax.set_title(reg.replace('_',' ').upper())
+
+#-- add legend to bottom
+plt.plot([],[],color='k',label='Voronoi Mascons')
+plt.plot([],[],color='red',label='JPL Mascons')
+plt.plot([],[],color='cyan',label='GSFC Mascons')
+fig.subplots_adjust(bottom=0.14,top=0.95)
+fig.legend(fancybox=True, framealpha=1.0,
+			loc="lower center", bbox_to_anchor=(0.5, 0.0),ncol=3)
+#-- save file
+outfile = os.path.join(os.getcwd(),'..','data','paper','mascon_timeseries_comparison.pdf')
+plt.savefig(outfile,format='PDF')
+plt.close(fig)
