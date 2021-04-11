@@ -13,14 +13,13 @@ from matplotlib.patches import Polygon
 import numpy as np
 import geopandas as gpd
 import matplotlib.pyplot as plt
-from numpy.core.numeric import count_nonzero
 from shapely.geometry import Point,Polygon
 from shapely.ops import unary_union
 from descartes import PolygonPatch
 from scipy.spatial import geometric_slerp
 import pygplates
 
-regions = ['karakoram_NW','karakoram_SE','nyainqentangla','alaska_east']
+regions = ['karakoram_NW','karakoram_SE','nyainqentangla','alaska']
 
 #-- initialize figure
 fig, axs = plt.subplots(2,2,figsize = (11,6), dpi=150)

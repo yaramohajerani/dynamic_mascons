@@ -45,7 +45,7 @@ def combine_kernels(parameters):
 	for i in mascon_nums:
 		#- read the netcdf files
 		kern_file = os.path.join(ddir,'MASCON_{0:d}_YLMS_{1:.2f}DEG_SKERNEL{2}_L{3:02d}_r{4:d}km.nc'.format(i,DDEG_RASTER,OCN,LMAX,RAD))
-		kerns[i] = ncdf_read(kern_file,DATE=False,TITLE=False)
+		kerns[i] = ncdf_read(kern_file,DATE=False)
 	#-- sum up the kernels
 	kern_sum = kerns[mascon_nums[0]]['data']
 	for i in mascon_nums[1:]:

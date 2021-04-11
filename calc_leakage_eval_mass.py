@@ -52,7 +52,7 @@ def calc_leakage(parameters):
 		fname = os.path.basename(f)
 		n = int(reg.search(fname).group(1))
 		#-- read the harmonics
-		Ylms[n] = ncdf_read_stokes(f,DATE=False,ATTRIBUTES=False)
+		Ylms[n] = ncdf_read_stokes(f,DATE=False)
 		nums.append(n)
 
 	#-- read kernels 
@@ -61,7 +61,7 @@ def calc_leakage(parameters):
 		kern_file = os.path.join(os.path.expanduser(parameters['DIRECTORY']),\
 			'MASCON_{0}_YLMS_{1:.2f}DEG_SKERNEL_CLM{2}_L{3:d}_r{4:d}km.nc'\
 			.format(n,DDEG_RASTER,OCN,LMAX,RAD))
-		kern_m = ncdf_read_stokes(kern_file,DATE=False,ATTRIBUTES=False)
+		kern_m = ncdf_read_stokes(kern_file,DATE=False)
 		kern['clm'] += kern_m['clm'][:,:]
 		kern['slm'] += kern_m['slm'][:,:]
 	

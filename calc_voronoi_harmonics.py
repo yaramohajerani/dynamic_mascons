@@ -82,7 +82,7 @@ def calc_harmonics(parameters):
 			Ylms[i] = gen_stokes(mass.reshape(len(lons),len(lats)),lons,lats,LMIN=LMIN,LMAX=LMAX,MMAX=MMAX,UNITS=1,PLM=plm,LOVE=(hl,kl,ll))
 			#-- save harmonics to file
 			outfile = os.path.join(out_dir,'mascon_{0:d}_Ylms_L{1:02d}_{2:.2f}deg.nc'.format(i,LMAX,DDEG_RASTER))
-			ncdf_stokes(np.array(Ylms[i]['clm']),np.array(Ylms[i]['slm']),np.arange(LMAX+1),np.arange(LMAX+1),0,0,FILENAME=outfile,DATE=False)
+			ncdf_stokes(np.array(Ylms[i].clm),np.array(Ylms[i].slm),np.arange(LMAX+1),np.arange(LMAX+1),0,0,FILENAME=outfile,DATE=False)
 			#-- add file to index list
 			index_fid.write('{0}\n'.format(outfile))
 		index_fid.close()
@@ -116,7 +116,7 @@ def calc_harmonics(parameters):
 
 		#-- convert each mascon back to spatial and save as netCDF
 		for i in range(len(Ylms)):
-			sp = harmonic_summation(Ylms[i]['clm'],Ylms[i]['slm'],lons,lats,LMAX=LMAX,MMAX=MMAX,PLM=plm)
+			sp = harmonic_summation(Ylms[i].clm,Ylms[i].slm,lons,lats,LMAX=LMAX,MMAX=MMAX,PLM=plm)
 			#-- save to file
 			outfile = os.path.join(out_dir,'mascon_{0:d}_spatial_L{1:02d}_{2:.2f}rasterDeg_{3:.2f}outDeg.nc'.format(i,LMAX,DDEG_RASTER,DDEG_OUT))
 			ncdf_write(np.transpose(sp),lons,lats,i,FILENAME=outfile,DATE=False,UNITS='cmWE',LONGNAME='Mascon {0:d}'.format(i))

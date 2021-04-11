@@ -5,7 +5,7 @@ by Yara Mohajerani
 
 Combine the mascon timeseries for fixed points and plot
 
-Last Update 12/2020
+Last Update 04/2021
 """
 #-- load required modules
 import os
@@ -27,6 +27,13 @@ def combine_mascons(parameters):
 	#-- Set up output labels
 	DS = '_FL' if (parameters['DESTRIPE'] in ['Y','y']) else ''
 	OCN = '_OCN' if parameters['MASCON_OCEAN'] in ['Y','y'] else ''
+	#-- GIA
+	if parameters['GIA'] == 'ICE6G-D':
+		GIA = 'ICE6G-D_VM5A_O512' 
+	elif parameters['GIA'] == 'AW13-ICE6G':
+		GIA = 'AW13-ICE6G_GA'
+	else:
+		GIA = ''
 
 	#-- load mascon configuration of interest
 	mascon_nums = np.array(parameters['MSCN_NUMS'].split(','),dtype=int)
@@ -39,7 +46,7 @@ def combine_mascons(parameters):
 	mascon = {}
 	for i in mascon_nums:
 		#- read the netcdf files
-		mscn_file = os.path.join(ddir,'MASCON_{0:d}_YLMS_{1:.2f}DEG_AW13_ICE6G_GA{2}_L{3:02d}_r{4:d}km{5}.txt'.format(i,DDEG_RASTER,OCN,LMAX,RAD,DS))
+		mscn_file = os.path.join(ddir,'MASCON_{0:d}_YLMS_{1:.2f}DEG_{2}{3}_L{4:02d}_r{5:d}km{6}.txt'.format(i,DDEG_RASTER,GIA,OCN,LMAX,RAD,DS))
 		mascon[i] = np.loadtxt(mscn_file)
 	#-- sum up the kernels
 	mons = np.array(mascon[i][:,0],dtype=int)
@@ -57,7 +64,7 @@ def combine_mascons(parameters):
 	#----------------------------------------------------------------------
 	#-- write sum to file
 	#----------------------------------------------------------------------
-	outfile = os.path.join(ddir,'MASCON_{0}_YLMS_{1:.2f}DEG_AW13_ICE6G_GA{2}_L{3:02d}_r{4:d}km{5}.txt'.format(out_lbl,DDEG_RASTER,OCN,LMAX,RAD,DS))
+	outfile = os.path.join(ddir,'MASCON_{0}_YLMS_{1:.2f}DEG_{2}{3}_L{4:02d}_r{5:d}km{6}.txt'.format(out_lbl,DDEG_RASTER,GIA,OCN,LMAX,RAD,DS))
 	fid = open(outfile,'w')
 	for i in range(len(tdec)):
 		fid.write('{0:03d} {1:12.4f} {2:16.10f} {3:16.10f} {4:16.5f}\n'.format(mons[i],tdec[i],mass[i],err[i],area))

@@ -24,7 +24,7 @@ from gravity_toolkit.tsregress import tsregress
 
 rad_e = 6.371e8  # -- Average Radius of the Earth [cm]
 
-regions = ['karakoram_NW','karakoram_SE','nyainqentangla','alaska_east']
+regions = ['karakoram_NW','karakoram_SE','nyainqentangla','alaska']
 
 #-- initialize figure
 fig, axs = plt.subplots(2,2,figsize = (10,6))
@@ -60,6 +60,14 @@ for count,reg in enumerate(regions):
 	#-- Set up output labels
 	DS = '_FL' if (parameters['DESTRIPE'] in ['Y','y']) else ''
 	OCN = '_OCN' if parameters['MASCON_OCEAN'] in ['Y','y'] else ''
+	#-- GIA
+	if parameters['GIA'] == 'ICE6G-D':
+		GIA = 'ICE6G-D_VM5A_O512' 
+	elif parameters['GIA'] == 'AW13-ICE6G':
+		GIA = 'AW13-ICE6G_GA'
+	else:
+		GIA = ''
+
 	#-- overwriting time-series txt files
 	CLOBBER = True if (parameters['CLOBBER'] in ['Y','y']) else False
 
@@ -91,7 +99,7 @@ for count,reg in enumerate(regions):
 	#----------------------------------------------------------------------
 	#-- Read the customized mascon timeseries
 	#----------------------------------------------------------------------
-	mscn_file = os.path.join(ddir,'MASCON_{0}_YLMS_{1:.2f}DEG_AW13_ICE6G_GA{2}_L{3:02d}_r{4:d}km{5}.txt'.format(lbl,DDEG_RASTER,OCN,LMAX,RAD,DS))
+	mscn_file = os.path.join(ddir,'MASCON_{0}_YLMS_{1:.2f}DEG_{2}{3}_L{4:02d}_r{5:d}km{6}.txt'.format(lbl,DDEG_RASTER,GIA,OCN,LMAX,RAD,DS))
 	ts = np.loadtxt(mscn_file)
 	tdec['vor'] = ts[:,1]
 	mass['vor'] = ts[:,2]
@@ -275,17 +283,17 @@ for count,reg in enumerate(regions):
 	#-- Plot Comparison
 	#----------------------------------------------------------------------
 	#-- plot voronoi mascons
-	ax.plot(tdec['vor'],mass['vor'],color='k',zorder=1)
+	ax.plot(tdec['vor'],mass['vor'],color='limegreen',zorder=3)
 	ax.fill_between(tdec['vor'],mass['vor']-err_line,y2=mass['vor']+err_line,
-					alpha=0.2,color='k',zorder=1)
+					alpha=0.2,color='limegreen',zorder=3)
 	#-- plot JPL mascons
-	ax.plot(tdec['jpl'],mass['jpl'],color='red',zorder=2)
+	ax.plot(tdec['jpl'],mass['jpl'],color='blue',zorder=1)
 	ax.fill_between(tdec['jpl'],mass['jpl']-errs['jpl'],y2=mass['jpl']+errs['jpl'],
-					alpha=0.35,color='red',zorder=2)
+					alpha=0.2,color='blue',zorder=1)
 	#-- plot GSFC mascons
-	ax.plot(tdec['gsfc'],mass['gsfc'],color='cyan',zorder=3)
+	ax.plot(tdec['gsfc'],mass['gsfc'],color='red',zorder=2)
 	ax.fill_between(tdec['gsfc'],mass['gsfc']-errs['gsfc'],y2=mass['gsfc']+errs['gsfc'],
-					alpha=0.35,color='cyan',zorder=3)
+					alpha=0.2,color='red',zorder=2)
 	ax.axvspan(2017.5, 2018.37, color='palegoldenrod',zorder=4)
 
 	if axi == 1:
@@ -296,9 +304,9 @@ for count,reg in enumerate(regions):
 	ax.set_title(reg.replace('_',' ').upper())
 
 #-- add legend to bottom
-plt.plot([],[],color='k',label='Voronoi Mascons')
-plt.plot([],[],color='red',label='JPL Mascons')
-plt.plot([],[],color='cyan',label='GSFC Mascons')
+plt.plot([],[],color='limegreen',label='Voronoi Mascons')
+plt.plot([],[],color='blue',label='JPL Mascons')
+plt.plot([],[],color='red',label='GSFC Mascons')
 fig.subplots_adjust(bottom=0.14,top=0.95)
 fig.legend(fancybox=True, framealpha=1.0,
 			loc="lower center", bbox_to_anchor=(0.5, 0.0),ncol=3)

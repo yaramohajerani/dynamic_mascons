@@ -42,6 +42,13 @@ def compare_timeseries(parameters):
 	#-- Set up output labels
 	DS = '_FL' if (parameters['DESTRIPE'] in ['Y','y']) else ''
 	OCN = '_OCN' if parameters['MASCON_OCEAN'] in ['Y','y'] else ''
+	#-- GIA
+	if parameters['GIA'] == 'ICE6G-D':
+		GIA = 'ICE6G-D_VM5A_O512' 
+	elif parameters['GIA'] == 'AW13-ICE6G':
+		GIA = 'AW13-ICE6G_GA'
+	else:
+		GIA = ''
 	#-- overwriting time-series txt files
 	CLOBBER = True if (parameters['CLOBBER'] in ['Y','y']) else False
 
@@ -73,7 +80,7 @@ def compare_timeseries(parameters):
 	#----------------------------------------------------------------------
 	#-- Read the customized mascon timeseries
 	#----------------------------------------------------------------------
-	mscn_file = os.path.join(ddir,'MASCON_{0}_YLMS_{1:.2f}DEG_AW13_ICE6G_GA{2}_L{3:02d}_r{4:d}km{5}.txt'.format(lbl,DDEG_RASTER,OCN,LMAX,RAD,DS))
+	mscn_file = os.path.join(ddir,'MASCON_{0}_YLMS_{1:.2f}DEG_{2}{3}_L{4:02d}_r{5:d}km{6}.txt'.format(lbl,DDEG_RASTER,GIA,OCN,LMAX,RAD,DS))
 	ts = np.loadtxt(mscn_file)
 	tdec['vor'] = ts[:,1]
 	mass['vor'] = ts[:,2]
