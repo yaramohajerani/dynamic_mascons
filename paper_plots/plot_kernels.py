@@ -43,7 +43,7 @@ for c,r in enumerate(regs.keys()):
 	# levels = [-1.5,-1,-0.5,-0.2,0,0.2,0.5,0.8,1,1.5]	#np.linspace(-1.6, 1.6, 17)
 	# p = ax[i,j].contourf(glon,glat,kern['data'],levels,cmap='RdBu',extend='both')
 	cs = ax[i,j].contour(glon,glat,kern['data'],[1.],colors='lime')#,cmap='RdBu',extend='both')
-	ax[i,j].clabel(cs, inline=True,fontsize=5,inline_spacing=0)
+	#ax[i,j].clabel(cs, inline=True,fontsize=5,inline_spacing=0)
 	#-- use an axis divider for the colorbar
 	drx = make_axes_locatable(ax[i,j])
 	cax = drx.append_axes("right", size="5%", pad=0.1)
@@ -60,6 +60,8 @@ for c,r in enumerate(regs.keys()):
 		ax[i,j].set_ylabel('Latitude (Degrees)')
 	if i == len(regs)-1:
 		ax[i,j].set_xlabel('Longitude (Degrees)')
+	ax[i,j].text(-0.05, 1.18, chr(c+65), transform=ax[i,j].transAxes,
+      fontsize=14, fontweight='bold', va='top', ha='right')
 plt.subplots_adjust(wspace=0, hspace=0)
 plt.tight_layout()
 plt.savefig(os.path.join(base_dir,'paper','kernels.pdf'),format='PDF')

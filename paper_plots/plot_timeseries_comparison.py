@@ -294,8 +294,11 @@ for count,reg in enumerate(regions):
 	ax.plot(tdec['gsfc'],mass['gsfc'],color='red',zorder=2)
 	ax.fill_between(tdec['gsfc'],mass['gsfc']-errs['gsfc'],y2=mass['gsfc']+errs['gsfc'],
 					alpha=0.2,color='red',zorder=2)
-	ax.axvspan(2017.5, 2018.37, color='palegoldenrod',zorder=4)
-
+	ax.axvspan(2017.5, 2018.37, color='lightgray',zorder=4,alpha=0.9)
+	
+	tarr = np.linspace(2001.5,2022,2) 
+	ax.plot(tarr,np.ones(len(tarr)),color='k',linewidth=0.8)
+	
 	if axi == 1:
 		ax.set_xlabel('Time [Decimal Year]')
 	if axj == 0:
@@ -303,6 +306,9 @@ for count,reg in enumerate(regions):
 	#-- add title and labels
 	ax.set_title(reg.replace('_',' ').upper())
 
+	#-- set constant y range for all subplots
+	ax.set_ylim([-300,250])
+	ax.set_xlim([2001.5,2022])
 #-- add legend to bottom
 plt.plot([],[],color='limegreen',label='Voronoi Mascons')
 plt.plot([],[],color='blue',label='JPL Mascons')

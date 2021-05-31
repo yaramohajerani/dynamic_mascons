@@ -67,7 +67,7 @@ for i,(r,v,k) in enumerate(zip(regs,[0,0,50],[70,85,40])):
 	sp1 = harmonic_summation(m1['clm'],m1['slm'],lons,lats,LMAX=LMAX,MMAX=MMAX,PLM=plm)
 	sp2 = harmonic_summation(m2['clm'],m2['slm'],lons,lats,LMAX=LMAX,MMAX=MMAX,PLM=plm)
 	levels = np.linspace(-1, 1, 11)
-	p = ax[i].contourf(glon,glat,sp1+sp2,cmap='RdBu',levels=levels,extend='both')
+	p = ax[i].contourf(glon,glat,sp1+sp2,cmap='RdBu',levels=levels,extend='both',alpha=0.6)
 	#-- use an axis divider for the colorbar
 	drx = make_axes_locatable(ax[i])
 	cax = drx.append_axes("right", size="5%", pad=0.1)
@@ -80,6 +80,7 @@ for i,(r,v,k) in enumerate(zip(regs,[0,0,50],[70,85,40])):
 	region = sv.regions[v]
 	n = len(region)
 	t = np.linspace(0,1,10)
+	elons, elats = [],[]
 	for j in range(n):
 		start = sv.vertices[region][j]
 		end = sv.vertices[region][(j + 1) % n]
@@ -88,7 +89,15 @@ for i,(r,v,k) in enumerate(zip(regs,[0,0,50],[70,85,40])):
 		for v in range(len(edge)):
 			edge_lats[v],edge_lons[v] = pygplates.PointOnSphere(edge[v]).to_lat_lon()
 		#-- plot the polygon edges
-		ax[i].plot(edge_lons,edge_lats,color='springgreen',linewidth=1.2)
+		ax[i].plot(edge_lons,edge_lats,color='lime',linewidth=1.5)
+		elons.append(edge_lons)
+		elats.append(edge_lats)
+	#-- add arrow
+	lon_cnt = np.mean(elons)-5
+	lat_cnt = np.mean(elats)-5
+	ar = 15
+	ax[i].arrow(lon_cnt-ar,lat_cnt-ar,ar,ar,facecolor='red',edgecolor='darkred',\
+		width=3,head_width=9,length_includes_head=True)
 	
 	ax[i].set_xlabel('Longitude (Degrees)')
 	ax[i].set_title(r.upper())

@@ -52,7 +52,14 @@ for count,reg in enumerate(regions):
 	lat0,lat1 = np.array(parameters['LAT_LIMITS'].split(','),dtype=float)
 	lon0,lon1 = np.array(parameters['LON_LIMITS'].split(','),dtype=float)
 	#-- make polygon of the frame to check what point are contained in it
-	frame_poly = Polygon([[lon0,lat0],[lon0,lat1],[lon1,lat1],[lon1,lat0]])
+	#-- add a leeway to make sure nothing is exlucded in plot
+	flon0 = lon0 - 20
+	flon1 = lon1 + 20
+	flat0 = lat0 - 15
+	flat1 = lat1 + 15
+	print(lon0,lon1,lat0,lat1)
+	print(flon0,flon1,flat0,flat1)
+	frame_poly = Polygon([[flon0,flat0],[flon0,flat1],[flon1,flat1],[flon1,flat0]])
 
 	#-- load mascon configuration of interest
 	mascon_nums = np.array(parameters['MSCN_NUMS'].split(','),dtype=int)
@@ -89,10 +96,17 @@ for count,reg in enumerate(regions):
 		for r in ['c','w','e']:
 			rgi[r].plot(ax=ax,alpha=0.3,fc='darkkhaki',ec='darkkhaki',rasterized=True)
 	polys = []
+	cent_lons,cent_lats = [],[]
 	#-- plot regions
 	for i,region in enumerate(sv.regions):
 		#-- check if polygon is within plotting frame
-		pt_lat,pt_lon = pygplates.PointOnSphere(sv.vertices[region][0]).to_lat_lon()
+		# pt_lat,pt_lon = pygplates.PointOnSphere(sv.vertices[region][0]).to_lat_lon()
+		# pt = Point(pt_lon,pt_lat)
+
+		reg_vert = sv.vertices[region]
+		#-- create polygon on surface of sphere
+		poly = pygplates.PolygonOnSphere(reg_vert)
+		pt_lat,pt_lon = np.array(poly.get_boundary_centroid().to_lat_lon())
 		pt = Point(pt_lon,pt_lat)
 		if pt.within(frame_poly):
 			n = len(region)
@@ -108,6 +122,8 @@ for count,reg in enumerate(regions):
 				if not (np.count_nonzero(edge_lons<0) > 0 and np.count_nonzero(edge_lons>0) > 0):
 					ax.plot(edge_lons,edge_lats,color='limegreen',linewidth=1.)
 			if i in mascon_nums:
+				cent_lons.append(pt_lon)
+				cent_lats.append(pt_lat)
 				lon_list = np.zeros(n)
 				lat_list = np.zeros(n)
 				for v in range(n):
@@ -123,6 +139,8 @@ for count,reg in enumerate(regions):
 	#-- add patch to legend
 	lgd_items = [vpatch]
 	lgd_lbls = ['Voronoi Mascons']
+	#-- also add centroids
+	ax.scatter(cent_lons,cent_lats,s=5,color='limegreen',zorder=5)
 
 	#----------------------------------------------------------------------
 	#-- plot JPL mascons
@@ -159,6 +177,9 @@ for count,reg in enumerate(regions):
 	ax.set_xlim([lon0,lon1])
 	ax.set_ylim([lat0,lat1])
 	ax.set_aspect('equal')
+	#-- add subplot label
+	ax.text(0.08, 1.1, chr(count+65), transform=ax.transAxes,
+      fontsize=14, fontweight='bold', va='top', ha='right')
 
 #-- add legend to bottom
 fig.subplots_adjust(bottom=0.12,top=0.95)

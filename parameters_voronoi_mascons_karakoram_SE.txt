@@ -57,6 +57,6 @@ GSFC_INPUT  ~/data.dir/mascons.dir/Goddard.dir/gsfc.glb_.200204_202009_rl06v1.0_
 #GSFC_INPUT  ~/data.dir/mascons.dir/Goddard.dir/GSFC.glb.200301_201607_v02.4-ICE6G.hdf
 GSFC_MSCNS  ~/data.dir/mascons.dir/Goddard.dir/mascon_grid.dir/goddard_1degree_mascon_grid.shp 
 RGI_DIR ~/data.dir/RGI
-LAT_LIMITS  25,45
-LON_LIMITS  65,100
+LAT_LIMITS  30,42	#25,45
+LON_LIMITS  67,90	#65,100
 CLOBBER	N	

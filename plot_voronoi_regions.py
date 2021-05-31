@@ -74,6 +74,8 @@ def plot_html(new_centroids,new_sv,ind,ddir):
 
 	fig = go.Figure(data=data, layout=layout)
 	
+	#-- remove axes
+	fig.update_scenes(xaxis_visible=False, yaxis_visible=False, zaxis_visible=False)
 	#-- save to file
 	fig.write_html(os.path.join(ddir,'spherical_voronoi_regions.html'))
 
