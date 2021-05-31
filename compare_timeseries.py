@@ -248,12 +248,30 @@ def compare_timeseries(parameters):
 		df[s]['Trend Err ({0}) Gt/yr'.format(com_lbl)] = fit['error'][1]
 		df[s]['Seasonal ({0}) Gt'.format(com_lbl)] = np.sqrt(fit['beta'][4]**2 + fit['beta'][5]**2)
 		df[s]['Seasonal Err ({0}) Gt'.format(com_lbl)] = np.sqrt(fit['error'][4]**2 + fit['error'][5]**2)
+		df[s]['R2 x1 ({0})'.format(com_lbl)] = fit['R2']
+		df[s]['BIC x1 ({0})'.format(com_lbl)] = fit['AIC']
+		df[s]['AIC x1 ({0})'.format(com_lbl)] = fit['BIC']
+		#-- compare with no trend case
+		fit = tsregress(tdec[s][ind[s]],mass[s][ind[s]],ORDER=0,CYCLES=[0.5,1])
+		df[s]['R2 x0 ({0})'.format(com_lbl)] = fit['R2']
+		df[s]['BIC x0 ({0})'.format(com_lbl)] = fit['AIC']
+		df[s]['AIC x0 ({0})'.format(com_lbl)] = fit['BIC']
+		#------------------------------------------------------
 		#-- also get trend for 2015 onwards
+		#------------------------------------------------------
 		ind15 = np.squeeze(np.nonzero(tdec[s]>2015))
 		fit = tsregress(tdec[s][ind15],mass[s][ind15],ORDER=1,CYCLES=[0.5,1])
-		df[s]['Trend (2015+) Gt/yr'.format(com_lbl)] = fit['beta'][1]
-		df[s]['Trend Err (2015+) Gt/yr'.format(com_lbl)] = fit['error'][1]
-
+		df[s]['Trend (2015+) Gt/yr'] = fit['beta'][1]
+		df[s]['Trend Err (2015+) Gt/yr'] = fit['error'][1]
+		df[s]['R2 x1 (2015+)'] = fit['R2']
+		df[s]['BIC x1 (2015+)'] = fit['AIC']
+		df[s]['AIC x1 (2015+)'] = fit['BIC']
+		#-- compare with no trend case
+		fit = tsregress(tdec[s][ind[s]],mass[s][ind[s]],ORDER=0,CYCLES=[0.5,1])
+		df[s]['R2 x0 (2015+)'] = fit['R2']
+		df[s]['BIC x0 (2015+)'] = fit['AIC']
+		df[s]['AIC x0 (2015+)'] = fit['BIC']
+		
 	#-- write regression results to file
 	df = pd.DataFrame(df)
 	df.to_csv(mscn_file.replace('.txt','_comparison_regession.csv'))
