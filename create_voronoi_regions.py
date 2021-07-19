@@ -34,24 +34,27 @@ origin = [0,0,0]
 #-- create plot
 #------------------------------------------------------------------------------
 def plot_html(new_centroids,new_sv,ind,outfile=''):
-	#-- plot generators
-	gens = go.Scatter3d(x=new_centroids[:, 0],y=new_centroids[:, 1],z=new_centroids[:, 2],mode='markers',marker={'size': 3,'opacity': 0.8,'color': 'blue'},name='Generator Points')
-	fixed = [None]*len(ind)
-	for i in range(len(ind)):
-		fixed[i] = go.Scatter3d(x=[new_centroids[ind[i], 0]],y=[new_centroids[ind[i], 1]],z=[new_centroids[ind[i], 2]],mode='markers',\
-			marker={'size': 5,'opacity': 0.8,'color': 'red'},name='Fixed Point {0:d}'.format(i))
-
-	data = [gens] + fixed
-
+	#-- initialize list to be plotted	
+	data = []
+	
+	#-- ploy polygons
 	for region in new_sv.regions:
 		n = len(region)
 		t = np.linspace(0,1,50)
+		poly_xy = np.zeros((n,3))
 		for i in range(n):
-			start = new_sv.vertices[region][i]
-			end = new_sv.vertices[region][(i + 1) % n]
-			result = np.array(geometric_slerp(start, end, t))
-			edge = go.Scatter3d(x=result[..., 0],y=result[..., 1],z=result[..., 2],mode='lines',line={'width': 1.5,'color': 'black'},name='region edge',showlegend=False)
-			data.append(edge)
+			poly_xy[i] = new_sv.vertices[region][i]
+		polys = go.Mesh3d(x=poly_xy[:,0], y=poly_xy[:,1], z=poly_xy[:,2], opacity=1.0)	
+		data.append(polys)
+
+	#-- plot generators
+	gens = go.Scatter3d(x=new_centroids[:, 0],y=new_centroids[:, 1],z=new_centroids[:, 2],mode='markers',marker={'size': 3,'opacity': 1.0,'color': 'black'},name='Generator Points')
+	fixed = [None]*len(ind)
+	for i in range(len(ind)):
+		fixed[i] = go.Scatter3d(x=[new_centroids[ind[i], 0]],y=[new_centroids[ind[i], 1]],z=[new_centroids[ind[i], 2]],mode='markers',\
+			marker={'size': 5,'opacity': 1.0,'color': 'red'},name='Fixed Point {0:d}'.format(i))
+
+	data += [gens] + fixed
 
 	#-- also plot world map
 	world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
@@ -62,27 +65,24 @@ def plot_html(new_centroids,new_sv,ind,outfile=''):
 				#-- make line on sphere
 				pl = pygplates.PolylineOnSphere(list(zip(lats,lons)))
 				xyz = pl.to_xyz_array()
-				cline = go.Scatter3d(x=xyz[:,0],y=xyz[:,1],z=xyz[:,2],mode='lines',line={'width': 2.5,'color': 'green'},name='Land',showlegend=False)
+				cline = go.Scatter3d(x=xyz[:,0],y=xyz[:,1],z=xyz[:,2],mode='lines',line={'width': 6,'color': 'darkgreen'},name='Land',showlegend=False)
 				data.append(cline)
 		else:
 			lons,lats = world['geometry'][i].exterior.coords.xy
 			#-- make line on sphere
 			pl = pygplates.PolylineOnSphere(list(zip(lats,lons)))
 			xyz = pl.to_xyz_array()
-			cline = go.Scatter3d(x=xyz[:,0],y=xyz[:,1],z=xyz[:,2],mode='lines',line={'width': 2.5,'color': 'green'},name='Land',showlegend=False)
+			cline = go.Scatter3d(x=xyz[:,0],y=xyz[:,1],z=xyz[:,2],mode='lines',line={'width': 6,'color': 'darkgreen'},name='Land',showlegend=False)
 			data.append(cline)
 
 	#-- configure layout
 	layout = go.Layout(margin={'l': 0, 'r': 0, 'b': 0, 't': 0})
-	# layout = go.Layout(margin={'l': 0, 'r': 0, 'b': 0, 't': 0},title={
-	# 		'text': "Final Generator Setup",
-	# 		'y':0.9,
-	# 		'x':0.5,
-	# 		'xanchor': 'center',
-	# 		'yanchor': 'top'})
 
 	fig = go.Figure(data=data, layout=layout)
 	
+	#-- remove axes
+	fig.update_scenes(xaxis_visible=False, yaxis_visible=False, zaxis_visible=False)
+
 	#-- save to file
 	fig.write_html(outfile)
 
@@ -95,40 +95,50 @@ def calc_regions(parameters):
 	# Set up initial generator grid
 	#---------------------------------------------------------------
 	n_iter = int(parameters['N_ITERATIONS'])
-	r_const = float(parameters['R_CONSTANT'])	
+	r_const = float(parameters['R_CONSTANT'])
+	rotate = True if parameters['ROTATE'].upper() in ['TRUE','Y'] else False
+	print('Rotate:', rotate)
 	#-- read fixed-point coordinates
 	coord_file = os.path.expanduser(parameters['COORD_FILE'])
 	ddir = os.path.dirname(coord_file)
 	df = pd.read_csv(coord_file)
-	lons_orig = np.array(df['LONS'])
-	lats_orig = np.array(df['LATS'])
-	#-- get reference point coordinates for calcuting distances to reference point
-	lat0_orig = np.mean(lats_orig)
-	lon0_orig = np.mean(lons_orig)
+	if rotate:
+		lons_orig = np.array(df['LONS'])
+		lats_orig = np.array(df['LATS'])
+		#-- get reference point coordinates for calcuting distances to reference point
+		lat0_orig = np.mean(lats_orig)
+		lon0_orig = np.mean(lons_orig)
 
-	# make rotation matrices to rotate fixed point to North Pole
-	ry = R.from_euler('y',  -(90-lat0_orig), degrees=True)
-	rz = R.from_euler('z', -lon0_orig, degrees=True)
+		# make rotation matrices to rotate fixed point to North Pole
+		ry = R.from_euler('y',  -(90-lat0_orig), degrees=True)
+		rz = R.from_euler('z', -lon0_orig, degrees=True)
 
-	# make a Cartesian vector fo fixed points and rotate to new frame
-	n_fixed = len(lons_orig)
-	lats = [None]*n_fixed
-	lons = [None]*n_fixed
-	for i in range(n_fixed):
-		xyz = ac.spherical_to_cartesian(1,np.radians(lats_orig[i]),np.radians(lons_orig[i]))
-		v = [k.value for k in xyz]
-		#-- rotate coordinates and get new fixed point
-		rot_xyz = ry.apply(rz.apply(v))
-		rot_latlon = ac.cartesian_to_spherical(rot_xyz[0], rot_xyz[1], rot_xyz[2])
-		lats[i] = np.degrees(rot_latlon[1].value)
-		lons[i] = np.degrees(rot_latlon[2].value)
-	lats = np.array(lats)
-	lons = np.array(lons)
+		# make a Cartesian vector fo fixed points and rotate to new frame
+		n_fixed = len(lons_orig)
+		lats = [None]*n_fixed
+		lons = [None]*n_fixed
+		for i in range(n_fixed):
+			xyz = ac.spherical_to_cartesian(1,np.radians(lats_orig[i]),np.radians(lons_orig[i]))
+			v = [k.value for k in xyz]
+			#-- rotate coordinates and get new fixed point
+			rot_xyz = ry.apply(rz.apply(v))
+			rot_latlon = ac.cartesian_to_spherical(rot_xyz[0], rot_xyz[1], rot_xyz[2])
+			lats[i] = np.degrees(rot_latlon[1].value)
+			lons[i] = np.degrees(rot_latlon[2].value)
+		lats = np.array(lats)
+		lons = np.array(lons)
 
-	#-- refernce points after rotation
-	lat0 = np.mean(lats)
-	lon0 = np.mean(lons)
-	print(f'Original lon {lon0_orig} lat {lat0_orig}. Transfomed lon {lon0:.2f} lat {lat0:.2f}.')
+		#-- refernce points after rotation
+		lat0 = np.mean(lats)
+		lon0 = np.mean(lons)
+		print(f'Original lon {lon0_orig} lat {lat0_orig}. Transfomed lon {lon0:.2f} lat {lat0:.2f}.')
+	else:
+		# read fixed points
+		lons = np.array(df['LONS'])
+		lats = np.array(df['LATS'])
+		# reference point
+		lat0 = np.mean(lats)
+		lon0 = np.mean(lons)
 
 	#-- get grid interval
 	eps = float(parameters['EPSILON'])
@@ -136,20 +146,27 @@ def calc_regions(parameters):
 	#-- colatitude and longtiude lists in radians
 	phis = np.radians(90-lats)
 	thetas = np.radians(lons)
-	#-- fill the rest of the coordinates (initial generators)
-	theta_list = np.concatenate( [thetas, \
-		np.arange(-np.pi, np.min(thetas),eps),\
-		np.arange(np.max(thetas)+eps, np.pi, eps)])
-	# theta_list = np.concatenate( [thetas, np.arange(np.max(thetas)+eps, 2*np.pi, eps)])
-	if len(lons)==1:
-		print('Only 1 given fixed point')
-		phi_list = np.arange(np.max(phis)+eps, np.pi, eps)
-		a1,a2 = np.meshgrid(phi_list,theta_list)
-		a1 = np.concatenate(( phis, a1.flatten() ))
-		a2 = np.concatenate(( thetas, a2.flatten() ))
+	if rotate:
+		#-- fill the rest of the coordinates (initial generators)
+		theta_list = np.concatenate( [thetas, \
+			np.arange(-np.pi, np.min(thetas),eps),\
+			np.arange(np.max(thetas)+eps, np.pi, eps)])
+		# theta_list = np.concatenate( [thetas, np.arange(np.max(thetas)+eps, 2*np.pi, eps)])
+		if len(lons)==1:
+			print('Only 1 given fixed point')
+			phi_list = np.arange(np.max(phis)+eps, np.pi, eps)
+			a1,a2 = np.meshgrid(phi_list,theta_list)
+			a1 = np.concatenate(( phis, a1.flatten() ))
+			a2 = np.concatenate(( thetas, a2.flatten() ))
+		else:
+			print('Multiple fixed points.')
+			phi_list = np.concatenate([phis, np.arange(np.max(phis)+eps, np.pi, eps) ] )
+			a1,a2 = np.meshgrid(phi_list,theta_list)
+			a1 = a1.flatten()
+			a2 = a2.flatten()
 	else:
-		print('Multiple fixed points.')
-		phi_list = np.concatenate([phis, np.arange(np.max(phis)+eps, np.pi, eps) ] )
+		phi_list = np.concatenate([phis,np.arange(eps,np.min(phis),eps),np.arange(np.max(phis)+eps,np.pi,eps)])
+		theta_list = np.concatenate([thetas,np.arange(eps,np.min(thetas),eps),np.arange(np.max(thetas)+eps,2*np.pi,eps)])
 		a1,a2 = np.meshgrid(phi_list,theta_list)
 		a1 = a1.flatten()
 		a2 = a2.flatten()
@@ -195,24 +212,28 @@ def calc_regions(parameters):
 	#---------------------------------------------------------------
 	#-- plot the initial configuration and save to html
 	#---------------------------------------------------------------
-	# first shift back to true lat/lon before plotting
-	ry_recover = R.from_euler('y', 90-lat0_orig, degrees=True)
-	rz_recover = R.from_euler('z', lon0_orig, degrees=True)
-	true_centroids = np.zeros((len(sv.regions),3))
-	for i in range(len(centroids)):
-		# Make sure to perform rotation in reverse order of first rotation
-		true_centroids[i] = rz_recover.apply(ry_recover.apply(centroids[i]))
-		if i in ind:
-			rec_latlon = ac.cartesian_to_spherical(true_centroids[i,0], true_centroids[i,1], true_centroids[i,2])
-			rec_lat = np.degrees(rec_latlon[1].value)
-			rec_lon = np.degrees(rec_latlon[2].value)
-			print('Recovered fixed point: ', rec_lat, rec_lon)
+	if rotate:
+		# first shift back to true lat/lon before plotting
+		ry_recover = R.from_euler('y', 90-lat0_orig, degrees=True)
+		rz_recover = R.from_euler('z', lon0_orig, degrees=True)
+		true_centroids = np.zeros((len(sv.regions),3))
+		for i in range(len(centroids)):
+			# Make sure to perform rotation in reverse order of first rotation
+			true_centroids[i] = rz_recover.apply(ry_recover.apply(centroids[i]))
+			if i in ind:
+				rec_latlon = ac.cartesian_to_spherical(true_centroids[i,0], true_centroids[i,1], true_centroids[i,2])
+				rec_lat = np.degrees(rec_latlon[1].value)
+				rec_lon = np.degrees(rec_latlon[2].value)
+				print('Recovered fixed point: ', rec_lat, rec_lon)
 
-	# make regions in true lat/lon
-	sv_latlon = SphericalVoronoi(true_centroids, r, origin)
-	sv_latlon.sort_vertices_of_regions()
-	plot_html(true_centroids, sv_latlon, ind, \
-		outfile=os.path.join(ddir,'spherical_voronoi_regions_0.html'))
+		# make regions in true lat/lon
+		sv_latlon = SphericalVoronoi(true_centroids, r, origin)
+		sv_latlon.sort_vertices_of_regions()
+		plot_html(true_centroids, sv_latlon, ind, \
+			outfile=os.path.join(ddir,'spherical_voronoi_regions_0.html'))
+	else:
+		plot_html(centroids, sv, ind, \
+			outfile=os.path.join(ddir,'spherical_voronoi_regions_0.html'))
 
 	#---------------------------------------------------------------
 	# use the great circle distance between a given centroid and a
@@ -242,23 +263,28 @@ def calc_regions(parameters):
 			#-- shift with respect to reference point
 			#-- the shift ratio is inversely proportional to the distance
 			ratio = r_const*(np.pi-dist)
+			if not rotate:
+				clon_shift = clon-ratio*(clon-lon0)
+			else:
+				clon_shift = copy.deepcopy(clon)
 			clat_shift = clat-ratio*(clat-lat0)
 			#-- convert shifted centroid from lat/lon to xyz on unit sphere
-			tmp_pt = pygplates.PointOnSphere([clat_shift, clon])
+			tmp_pt = pygplates.PointOnSphere([clat_shift, clon_shift])
 			new_centroids[i] = np.array(tmp_pt.to_xyz())
 		#-- set the centroid of the fixed points back to their original values
 		for i in ind:
 			new_centroids[i] = points[i]
 	
 	#-- shift back to true lat/lon after final iteration
-	for i in range(len(new_centroids)):
-		# Make sure to perform rotation in reverse order of first rotation
-		new_centroids[i] = rz_recover.apply(ry_recover.apply(new_centroids[i]))
-		if i in ind:
-			rec_latlon = ac.cartesian_to_spherical(new_centroids[i,0], new_centroids[i,1], new_centroids[i,2])
-			rec_lat = np.degrees(rec_latlon[1].value)
-			rec_lon = np.degrees(rec_latlon[2].value)
-			print('Recovered fixed point (Final): ', rec_lat, rec_lon)
+	if rotate:
+		for i in range(len(new_centroids)):
+			# Make sure to perform rotation in reverse order of first rotation
+			new_centroids[i] = rz_recover.apply(ry_recover.apply(new_centroids[i]))
+			if i in ind:
+				rec_latlon = ac.cartesian_to_spherical(new_centroids[i,0], new_centroids[i,1], new_centroids[i,2])
+				rec_lat = np.degrees(rec_latlon[1].value)
+				rec_lon = np.degrees(rec_latlon[2].value)
+				print('Recovered fixed point (Final): ', rec_lat, rec_lon)
 
 	#-- perform final tesselation based on new centroids
 	new_sv = SphericalVoronoi(new_centroids, r, origin)

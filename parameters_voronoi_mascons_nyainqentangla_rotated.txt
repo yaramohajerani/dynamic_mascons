@@ -1,15 +1,15 @@
-ROTATE  False
-N_ITERATIONS	50
-R_CONSTANT	0.025
-VORONOI_FILE	~/dynamic_mascons/data/karakoram/submitted_version/sv_obj
-COORD_FILE	~/dynamic_mascons/data/karakoram/submitted_version/fixed_points_sample.csv 
+ROTATE  True
+N_ITERATIONS	48
+R_CONSTANT	0.02
+VORONOI_FILE	~/dynamic_mascons/data/nyainqentangla/sv_obj
+COORD_FILE	~/dynamic_mascons/data/nyainqentangla/fixed_points_sample.csv 
 DDEG_RASTER	0.25
 DDEG_OUT	0.5
 LMAX	60
 MMAX	60
 LMIN	0
 LOVE_FILE	~/read-GRACE-harmonics/gravity_toolkit/data/love_numbers
-HARMONIC_DIRECTORY	~/dynamic_mascons/data/karakoram/submitted_version/harmonics
+HARMONIC_DIRECTORY	~/dynamic_mascons/data/nyainqentangla/harmonics
 EPSILON	0.35
 MAKE_HARMONICS	Y
 MAKE_SPATIAL	Y
@@ -20,14 +20,10 @@ MASCON_OCEAN	Y
 DDEG	0.5,0.5
 INTERVAL	1
 LANDMASK	~/data.dir/coasts.dir/landsea_hd.nc
-MASCON_INDEX	~/dynamic_mascons/data/karakoram/submitted_version/harmonics/mascon_Ylms_index_L60_0.25deg.txt
-DIRECTORY	~/dynamic_mascons/data/karakoram/submitted_version/MSCNS
-#MSCN_NUMS	0,18,21,30
-#MSCN_NAME   karakoram
-#MSCN_NUMS  0,30
-#MSCN_NAME   karakoram_SE
-MSCN_NUMS	18,21
-MSCN_NAME	karakoram_NW
+MASCON_INDEX	~/dynamic_mascons/data/nyainqentangla/harmonics/mascon_Ylms_index_L60_0.25deg.txt
+DIRECTORY	~/dynamic_mascons/data/nyainqentangla/MSCNS
+MSCN_NUMS	0,25,41
+MSCN_NAME   nyainqentangla
 PROC	JPL
 DREL		RL06	
 DSET		GSM	
@@ -39,8 +35,8 @@ SLR_C20		GSFC
 SLR_C30		GSFC	
 ATM		N	
 POLE_TIDE		N	
-GIA         ICE6G-D
-GIA_FILE    ~/data.dir/gia.dir/ice-6g.dir/ice6g-d.dir/Stokes_trend_VM5a_O512.txt  
+GIA			ICE6G-D
+GIA_FILE	~/data.dir/gia.dir/ice-6g.dir/ice6g-d.dir/Stokes_trend_VM5a_O512.txt	
 #GIA		AW13-ICE6G	
 #GIA_FILE	~/data.dir/gia.dir/geruo.dir/ice6g.dir/stokes.ice6g_GA.txt
 REMOVE_FILE		None
@@ -58,6 +54,6 @@ GSFC_INPUT  ~/data.dir/mascons.dir/Goddard.dir/gsfc.glb_.200204_202009_rl06v1.0_
 #GSFC_INPUT  ~/data.dir/mascons.dir/Goddard.dir/GSFC.glb.200301_201607_v02.4-ICE6G.hdf
 GSFC_MSCNS  ~/data.dir/mascons.dir/Goddard.dir/mascon_grid.dir/goddard_1degree_mascon_grid.shp 
 RGI_DIR ~/data.dir/RGI
-LAT_LIMITS  30,42   #25,45
-LON_LIMITS  67,90   #65,100
-CLOBBER	N 
+LAT_LIMITS  20,38	#20,40
+LON_LIMITS  72,105	#67,105
+CLOBBER N
