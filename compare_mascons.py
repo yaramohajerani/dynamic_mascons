@@ -122,7 +122,7 @@ def compare_mascons(parameters,jpl,gsfc):
 		for i in range(len(jpl_gdf)):
 			#-- include polygons if intersection is more than a quarter of the mascon area
 			# if poly_sum.intersects(jpl_gdf['geometry'][i]):
-			if poly_sum.intersection(jpl_gdf['geometry'][i]).area > jpl_gdf['geometry'][i].area/4:
+			if poly_sum.intersection(jpl_gdf['geometry'][i]).area > jpl_gdf['geometry'][i].area/2:
 				print("Including JPL Mascon #:",i)
 				patch = PolygonPatch(jpl_gdf['geometry'][i],ec='blue',fc='dodgerblue',linewidth=1.5,alpha=0.3,zorder=3)
 				jplpatch = ax.add_patch(patch)

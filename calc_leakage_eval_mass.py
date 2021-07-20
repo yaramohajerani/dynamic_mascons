@@ -37,7 +37,7 @@ def calc_leakage(parameters):
 	lbl = '{0}_{1}'.format(mascon_name,parameters['MSCN_NUMS'].replace(',','+'))
 
 	#-- read mascon harmonics
-	harmonic_dir = os.path.join(os.path.dirname(os.path.expanduser(parameters['DIRECTORY'])),'harmonics')
+	harmonic_dir = os.path.expanduser(parameters['HARMONIC_DIRECTORY'])
 	harm_index = os.path.join(harmonic_dir,'mascon_Ylms_index_L{0:d}_{1:.2f}deg.txt'.format(LMAX,DDEG_RASTER))
 	fid = open(harm_index,'r')
 	file_list = fid.readlines()

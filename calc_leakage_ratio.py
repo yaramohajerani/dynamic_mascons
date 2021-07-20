@@ -56,7 +56,7 @@ def calc_leakage(parameters):
 	kern_file = os.path.join(os.path.expanduser(parameters['DIRECTORY']),\
 		'MASCON_{0}_YLMS_{1:.2f}DEG_SKERNEL{2}_L{3:d}_r{4:d}km.nc'\
 		.format(lbl,DDEG_RASTER,OCN,LMAX,RAD))
-	kern_data = ncdf_read(kern_file,DATE=False,ATTRIBUTES=False,TITLE=False)
+	kern_data = ncdf_read(kern_file,DATE=False)
 	
 	#-- extra kernel fields and make grid
 	lons = kern_data['lon']
@@ -84,7 +84,7 @@ def calc_leakage(parameters):
 	harmonic_dir = os.path.join(os.path.dirname(os.path.expanduser(parameters['DIRECTORY'])),'harmonics')
 	for i in mascon_nums:
 		har_file = os.path.join(harmonic_dir,'mascon_{0:d}_Ylms_L{1:d}_{2:.2f}deg.nc'.format(i,LMAX,DDEG_RASTER))
-		Ylms[i] = ncdf_read_stokes(har_file,DATE=False,ATTRIBUTES=False)
+		Ylms[i] = ncdf_read_stokes(har_file,DATE=False)
 
 	#-- convert the harmonics to spatial domain and sum up mascons
 	harm_sum = np.zeros(glon.shape)
