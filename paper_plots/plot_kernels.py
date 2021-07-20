@@ -22,10 +22,17 @@ base_dir = os.path.join(os.getcwd(),'..','data')
 #-- load in world map for plotting in background
 world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
 
-regs = {'karakoram_NW':{'region':'karakoram','label':'NW_18+21','lat_range':[15,45],'lon_range':[60,110]},
-		'karakoram_NE':{'region':'karakoram','label':'SE_0+30','lat_range':[15,45],'lon_range':[60,110]},
-		'nyainqentangla':{'region':'nyainqentangla','label':'0+24+27','lat_range':[15,45],'lon_range':[60,110]},
-		'alaska':{'region':'alaska','label':'50+56+58+170','lat_range':[45,75],'lon_range':[-175,-120]}
+# regs = {'karakoram_NW':{'region':'karakoram','label':'NW_18+21','lat_range':[15,45],'lon_range':[60,110]},
+# 		'karakoram_NE':{'region':'karakoram','label':'SE_0+30','lat_range':[15,45],'lon_range':[60,110]},
+# 		'nyainqentangla':{'region':'nyainqentangla','label':'0+24+27','lat_range':[15,45],'lon_range':[60,110]},
+# 		'alaska':{'region':'alaska','label':'50+56+58+170','lat_range':[45,75],'lon_range':[-175,-120]}
+# 		#'alaska_SE':{'region':'alaska','label':'east_42+43+163+170','lat_range':[45,75],'lon_range':[-175,-120]}
+# 		}
+
+regs = {'karakoram_NW':{'region':'karakoram','label':'NW_1+25','lat_range':[15,45],'lon_range':[60,110],'dir':'rotated_version'},
+		'karakoram_NE':{'region':'karakoram','label':'SE_0+57+73','lat_range':[15,45],'lon_range':[60,110],'dir':'rotated_version'},
+		'nyainqentangla':{'region':'nyainqentangla','label':'0+24+27','lat_range':[15,45],'lon_range':[60,110],'dir':''},
+		'alaska':{'region':'alaska','label':'0+64+78','lat_range':[45,75],'lon_range':[-175,-120],'dir':'rotated_version'}
 		#'alaska_SE':{'region':'alaska','label':'east_42+43+163+170','lat_range':[45,75],'lon_range':[-175,-120]}
 		}
 
@@ -35,7 +42,7 @@ for c,r in enumerate(regs.keys()):
 	i = int(c/2) # row number
 	j = c%2	# column number
 	#-- read kernel
-	kern = ncdf_read(os.path.join(base_dir,regs[r]['region'],'MSCNS','MASCON_{0}_{1}_YLMS_0.25DEG_SKERNEL_OCN_L60_r250km.nc'.\
+	kern = ncdf_read(os.path.join(base_dir,regs[r]['region'],regs[r]['dir'], 'MSCNS','MASCON_{0}_{1}_YLMS_0.25DEG_SKERNEL_OCN_L60_r250km.nc'.\
 		format(regs[r]['region'],regs[r]['label'])),DATE=False)
 	#-- plot kernel
 	glon,glat = np.meshgrid(kern['lon'],kern['lat'])
@@ -64,5 +71,5 @@ for c,r in enumerate(regs.keys()):
       fontsize=14, fontweight='bold', va='top', ha='right')
 plt.subplots_adjust(wspace=0, hspace=0)
 plt.tight_layout()
-plt.savefig(os.path.join(base_dir,'paper','kernels.pdf'),format='PDF')
+plt.savefig(os.path.join(base_dir,'paper','kernels_new.pdf'),format='PDF')
 plt.close(fig)

@@ -29,6 +29,7 @@ world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
 
 #-- make a list of regions to be plotted
 regs = ['karakoram','nyainqentangla','alaska']
+reg_subdir = ['rotated_version','','rotated_version']
 
 #-- set up grid
 DDEG = 0.5
@@ -56,13 +57,13 @@ for m in range(0,MMAX+1):#-- MMAX+1 to include MMAX
         plm[l,m,:] = plm[l,m,:]*dfactor[l]
 
 fig, ax = plt.subplots(len(regs),1,figsize = (8,10),sharey=True)#, dpi=100)
-for i,(r,v,k) in enumerate(zip(regs,[0,0,50],[70,85,40])):
+for i,(r,subdir,v,k) in enumerate(zip(regs,reg_subdir,[0,0,0],[64,76,40])):
 	#-- First load the saved SphericalVoronoi object
-	with open(os.path.join(base_dir,r,'sv_obj'), 'rb') as in_file:
+	with open(os.path.join(base_dir,r,subdir,'sv_obj'), 'rb') as in_file:
 		sv = pickle.load(in_file)
 	#-- read harmonics
-	m1 = ncdf_read_stokes(os.path.join(base_dir,r,'harmonics','mascon_{0:d}_Ylms_L60_0.25deg.nc'.format(v)),DATE=False)
-	m2 = ncdf_read_stokes(os.path.join(base_dir,r,'harmonics','mascon_{0:d}_Ylms_L60_0.25deg.nc'.format(k)),DATE=False)
+	m1 = ncdf_read_stokes(os.path.join(base_dir,r,subdir,'harmonics','mascon_{0:d}_Ylms_L60_0.25deg.nc'.format(v)),DATE=False)
+	m2 = ncdf_read_stokes(os.path.join(base_dir,r,subdir,'harmonics','mascon_{0:d}_Ylms_L60_0.25deg.nc'.format(k)),DATE=False)
 	#-- calculate the spatial representation of the harmonics
 	sp1 = harmonic_summation(m1['clm'],m1['slm'],lons,lats,LMAX=LMAX,MMAX=MMAX,PLM=plm)
 	sp2 = harmonic_summation(m2['clm'],m2['slm'],lons,lats,LMAX=LMAX,MMAX=MMAX,PLM=plm)

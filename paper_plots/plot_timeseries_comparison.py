@@ -24,7 +24,7 @@ from gravity_toolkit.tsregress import tsregress
 
 rad_e = 6.371e8  # -- Average Radius of the Earth [cm]
 
-regions = ['karakoram_NW','karakoram_SE','nyainqentangla','alaska']
+regions = ['karakoram_NW_rotated','karakoram_SE_rotated','nyainqentangla','alaska_rotated']
 
 #-- initialize figure
 fig, axs = plt.subplots(2,2,figsize = (10,6))
@@ -161,7 +161,7 @@ for count,reg in enumerate(regions):
 		#-- add up mascons are inside the polygon union
 		for m in range(len(df_mask)):
 			#-- include polygons if intersection is more than a quarter of the mascon area
-			if poly_sum.intersection(df_mask['geometry'][m]).area > df_mask['geometry'][m].area/4:
+			if poly_sum.intersection(df_mask['geometry'][m]).area > df_mask['geometry'][m].area/2:
 				print("Including JPL Mascon {0}".format(m))
 				#-- sum up grid poitns that are within df_mask['geometry'][m]
 				for i in range(len(jpl_lons)):
@@ -283,17 +283,17 @@ for count,reg in enumerate(regions):
 	#-- Plot Comparison
 	#----------------------------------------------------------------------
 	#-- plot voronoi mascons
-	ax.plot(tdec['vor'],mass['vor'],color='limegreen',zorder=3)
+	ax.plot(tdec['vor'],mass['vor'],color='darkgoldenrod',zorder=3)
 	ax.fill_between(tdec['vor'],mass['vor']-err_line,y2=mass['vor']+err_line,
-					alpha=0.2,color='limegreen',zorder=3)
+					alpha=0.2,color='darkgoldenrod',zorder=3)
 	#-- plot JPL mascons
-	ax.plot(tdec['jpl'],mass['jpl'],color='blue',zorder=1)
+	ax.plot(tdec['jpl'],mass['jpl'],color='royalblue',zorder=1)
 	ax.fill_between(tdec['jpl'],mass['jpl']-errs['jpl'],y2=mass['jpl']+errs['jpl'],
-					alpha=0.2,color='blue',zorder=1)
+					alpha=0.2,color='royalblue',linestyle=':',zorder=1)
 	#-- plot GSFC mascons
-	ax.plot(tdec['gsfc'],mass['gsfc'],color='red',zorder=2)
+	ax.plot(tdec['gsfc'],mass['gsfc'],color='darkred',zorder=2)
 	ax.fill_between(tdec['gsfc'],mass['gsfc']-errs['gsfc'],y2=mass['gsfc']+errs['gsfc'],
-					alpha=0.2,color='red',zorder=2)
+					alpha=0.2,color='darkred',linestyle='--',zorder=2)
 	ax.axvspan(2017.5, 2018.37, color='lightgray',zorder=4,alpha=0.9)
 	
 	tarr = np.linspace(2001.5,2022,2) 
@@ -304,15 +304,15 @@ for count,reg in enumerate(regions):
 	if axj == 0:
 		ax.set_ylabel('Mass [Gt]')
 	#-- add title and labels
-	ax.set_title(reg.replace('_',' ').upper())
+	ax.set_title(reg.replace('rotated','').replace('_',' ').upper())
 
 	#-- set constant y range for all subplots
-	ax.set_ylim([-300,250])
+	ax.set_ylim([-650,550])
 	ax.set_xlim([2001.5,2022])
 #-- add legend to bottom
-plt.plot([],[],color='limegreen',label='Voronoi Mascons')
-plt.plot([],[],color='blue',label='JPL Mascons')
-plt.plot([],[],color='red',label='GSFC Mascons')
+plt.plot([],[],color='darkgoldenrod',label='Voronoi Mascons')
+plt.plot([],[],color='royalblue',linestyle=':',label='JPL Mascons')
+plt.plot([],[],color='darkred',linestyle='--',label='GSFC Mascons')
 fig.subplots_adjust(bottom=0.14,top=0.95)
 fig.legend(fancybox=True, framealpha=1.0,
 			loc="lower center", bbox_to_anchor=(0.5, 0.0),ncol=3)

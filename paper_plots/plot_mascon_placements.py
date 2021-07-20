@@ -19,7 +19,7 @@ from descartes import PolygonPatch
 from scipy.spatial import geometric_slerp
 import pygplates
 
-regions = ['karakoram_NW','karakoram_SE','nyainqentangla','alaska']
+regions = ['karakoram_NW_rotated','karakoram_SE_rotated','nyainqentangla','alaska_rotated']
 
 #-- initialize figure
 fig, axs = plt.subplots(2,2,figsize = (11,6), dpi=150)
@@ -148,7 +148,7 @@ for count,reg in enumerate(regions):
 	print(len(jpl_gdf))
 	for i in range(len(jpl_gdf)):
 		#-- include polygons if intersection is more than a quarter of the mascon area
-		if poly_sum.intersection(jpl_gdf['geometry'][i]).area > jpl_gdf['geometry'][i].area/4:
+		if poly_sum.intersection(jpl_gdf['geometry'][i]).area > jpl_gdf['geometry'][i].area/2:
 			print("Including JPL Mascon #:",i)
 			patch = PolygonPatch(jpl_gdf['geometry'][i],ec='blue',fc='dodgerblue',linewidth=1.5,alpha=0.3,zorder=3)
 			jplpatch = ax.add_patch(patch)
@@ -169,7 +169,7 @@ for count,reg in enumerate(regions):
 	lgd_lbls.append('GSFC Mascons')
 
 	#-- add title and labels
-	ax.set_title(reg.replace('_',' ').upper())
+	ax.set_title(reg.replace('rotated','').replace('_',' ').upper())
 	if axi == 1:
 		ax.set_xlabel('Longitude (Degrees)')
 	if axj == 0:
