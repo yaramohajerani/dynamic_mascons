@@ -1,15 +1,15 @@
 ROTATE  True
-N_ITERATIONS	60
+N_ITERATIONS	50
 R_CONSTANT	0.02
-VORONOI_FILE	~/dynamic_mascons/data/alaska/sv_obj
-COORD_FILE	~/dynamic_mascons/data/alaska/fixed_points_sample.csv 
+VORONOI_FILE	~/dynamic_mascons/data/alaska/rotated_version/sv_obj
+COORD_FILE	~/dynamic_mascons/data/alaska/rotated_version/fixed_points_sample.csv 
 DDEG_RASTER	0.25
 DDEG_OUT	0.5
 LMAX	60
 MMAX	60
 LMIN	0
 LOVE_FILE	~/read-GRACE-harmonics/gravity_toolkit/data/love_numbers
-HARMONIC_DIRECTORY	~/dynamic_mascons/data/alaska/harmonics
+HARMONIC_DIRECTORY	~/dynamic_mascons/data/alaska/rotated_version/harmonics
 EPSILON	0.4
 MAKE_HARMONICS	Y
 MAKE_SPATIAL	Y
@@ -20,9 +20,9 @@ MASCON_OCEAN	Y
 DDEG	0.5,0.5
 INTERVAL	1
 LANDMASK	~/data.dir/coasts.dir/landsea_hd.nc
-MASCON_INDEX	~/dynamic_mascons/data/alaska/harmonics/mascon_Ylms_index_L60_0.25deg.txt
-DIRECTORY	~/dynamic_mascons/data/alaska/MSCNS
-MSCN_NUMS	0,1,8,71,141
+MASCON_INDEX	~/dynamic_mascons/data/alaska/rotated_version/harmonics/mascon_Ylms_index_L60_0.25deg.txt
+DIRECTORY	~/dynamic_mascons/data/alaska/rotated_version/MSCNS
+MSCN_NUMS	0,78
 MSCN_NAME   alaska
 PROC	JPL
 DREL		RL06	
@@ -55,6 +55,6 @@ GSFC_INPUT  ~/data.dir/mascons.dir/Goddard.dir/gsfc.glb_.200204_202009_rl06v1.0_
 #GSFC_INPUT  ~/data.dir/mascons.dir/Goddard.dir/GSFC.glb.200301_201607_v02.4-ICE6G.hdf
 GSFC_MSCNS  ~/data.dir/mascons.dir/Goddard.dir/mascon_grid.dir/goddard_1degree_mascon_grid.shp 
 RGI_DIR ~/data.dir/RGI
-LAT_LIMITS  50,65 	#50,71
-LON_LIMITS  -150,-122	#-161.5,-121
+LAT_LIMITS  50,67 	#50,71
+LON_LIMITS  -152,-122	#-161.5,-121
 CLOBBER	N

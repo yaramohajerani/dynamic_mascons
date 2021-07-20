@@ -1,15 +1,15 @@
 ROTATE  True
 N_ITERATIONS	50
 R_CONSTANT	0.025
-VORONOI_FILE	~/dynamic_mascons/data/karakoram/sv_obj
-COORD_FILE	~/dynamic_mascons/data/karakoram/fixed_points_sample.csv 
+VORONOI_FILE	~/dynamic_mascons/data/karakoram/rotated_version/sv_obj
+COORD_FILE	~/dynamic_mascons/data/karakoram/rotated_version/fixed_points_sample.csv 
 DDEG_RASTER	0.25
 DDEG_OUT	0.5
 LMAX	60
 MMAX	60
 LMIN	0
 LOVE_FILE	~/read-GRACE-harmonics/gravity_toolkit/data/love_numbers
-HARMONIC_DIRECTORY	~/dynamic_mascons/data/karakoram/harmonics
+HARMONIC_DIRECTORY	~/dynamic_mascons/data/karakoram/rotated_version/harmonics
 EPSILON	0.35
 MAKE_HARMONICS	Y
 MAKE_SPATIAL	Y
@@ -20,9 +20,9 @@ MASCON_OCEAN	Y
 DDEG	0.5,0.5
 INTERVAL	1
 LANDMASK	~/data.dir/coasts.dir/landsea_hd.nc
-MASCON_INDEX	~/dynamic_mascons/data/karakoram/harmonics/mascon_Ylms_index_L60_0.25deg.txt
-DIRECTORY	~/dynamic_mascons/data/karakoram/MSCNS
-MSCN_NUMS	33,41,169,178
+MASCON_INDEX	~/dynamic_mascons/data/karakoram/rotated_version/harmonics/mascon_Ylms_index_L60_0.25deg.txt
+DIRECTORY	~/dynamic_mascons/data/karakoram/rotated_version/MSCNS
+MSCN_NUMS	1,25
 MSCN_NAME	karakoram_NW
 PROC	JPL
 DREL		RL06	
@@ -54,6 +54,6 @@ GSFC_INPUT  ~/data.dir/mascons.dir/Goddard.dir/gsfc.glb_.200204_202009_rl06v1.0_
 #GSFC_INPUT  ~/data.dir/mascons.dir/Goddard.dir/GSFC.glb.200301_201607_v02.4-ICE6G.hdf
 GSFC_MSCNS  ~/data.dir/mascons.dir/Goddard.dir/mascon_grid.dir/goddard_1degree_mascon_grid.shp 
 RGI_DIR ~/data.dir/RGI
-LAT_LIMITS  30,42   #25,45
+LAT_LIMITS  28,42   #25,45
 LON_LIMITS  67,90   #65,100
 CLOBBER	N 

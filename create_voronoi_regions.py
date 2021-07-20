@@ -146,12 +146,14 @@ def calc_regions(parameters):
 	#-- colatitude and longtiude lists in radians
 	phis = np.radians(90-lats)
 	thetas = np.radians(lons)
+	# change to -180 to 180 range.
+	if (thetas > np.pi).any():
+		thetas -= 2*np.pi
 	if rotate:
 		#-- fill the rest of the coordinates (initial generators)
 		theta_list = np.concatenate( [thetas, \
 			np.arange(-np.pi, np.min(thetas),eps),\
 			np.arange(np.max(thetas)+eps, np.pi, eps)])
-		# theta_list = np.concatenate( [thetas, np.arange(np.max(thetas)+eps, 2*np.pi, eps)])
 		if len(lons)==1:
 			print('Only 1 given fixed point')
 			phi_list = np.arange(np.max(phis)+eps, np.pi, eps)
