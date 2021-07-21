@@ -259,6 +259,8 @@ for count,reg in enumerate(regions):
 		#-- remove common mean
 		mass[s] -= np.mean(mass[s][ind[s]])
 	"""
+	** FOR REGRESSION RESULTS, RUN compare_timeseries.py **
+	(kept for reference)
 	df = {}
 	for s in sols:
 		df[s] = {}
@@ -307,7 +309,10 @@ for count,reg in enumerate(regions):
 	ax.set_title(reg.replace('rotated','').replace('_',' ').upper())
 
 	#-- set constant y range for all subplots
-	ax.set_ylim([-650,550])
+	if 'alaska' in reg:
+		ax.set_ylim([-650,550])
+	else:
+		ax.set_ylim([-300,250])
 	ax.set_xlim([2001.5,2022])
 #-- add legend to bottom
 plt.plot([],[],color='darkgoldenrod',label='Voronoi Mascons')

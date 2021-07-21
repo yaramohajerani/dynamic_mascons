@@ -142,7 +142,7 @@ def compare_timeseries(parameters):
 		#-- add up mascons are inside the polygon union
 		for m in range(len(df_mask)):
 			#-- include polygons if intersection is more than a quarter of the mascon area
-			if poly_sum.intersection(df_mask['geometry'][m]).area > df_mask['geometry'][m].area/4:
+			if poly_sum.intersection(df_mask['geometry'][m]).area > df_mask['geometry'][m].area/2:
 				print("Including JPL Mascon {0}".format(m))
 				#-- sum up grid poitns that are within df_mask['geometry'][m]
 				for i in range(len(jpl_lons)):
