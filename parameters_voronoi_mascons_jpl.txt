@@ -1,18 +1,7 @@
-ROTATE  True
-N_ITERATIONS	50
-R_CONSTANT	0.02
-VORONOI_FILE	~/dynamic_mascons/data/alaska/rotated_version/sv_obj
-COORD_FILE	~/dynamic_mascons/data/alaska/rotated_version/fixed_points_sample.csv 
-DDEG_RASTER	0.25
-DDEG_OUT	0.5
 LMAX	60
 MMAX	60
 LMIN	0
 LOVE_FILE	~/read-GRACE-harmonics/gravity_toolkit/data/love_numbers
-HARMONIC_DIRECTORY	~/dynamic_mascons/data/alaska/rotated_version/harmonics
-EPSILON	0.4
-MAKE_HARMONICS	Y
-MAKE_SPATIAL	N
 RAD	250
 DATAFORM	netCDF4
 FIT_METHOD	1
@@ -20,10 +9,8 @@ MASCON_OCEAN	Y
 DDEG	0.5,0.5
 INTERVAL	1
 LANDMASK	~/data.dir/coasts.dir/landsea_hd.nc
-MASCON_INDEX	~/dynamic_mascons/data/alaska/rotated_version/harmonics/mascon_Ylms_index_L60_0.25deg.txt
-DIRECTORY	~/dynamic_mascons/data/alaska/rotated_version/MSCNS
-MSCN_NUMS	0,78
-MSCN_NAME   alaska
+MASCON_INDEX	~/data.dir/mascons.dir/JPL.dir/JPL_MASCON_mask/jpl_shfted_mask.dir/harmonics/mascon_Ylms_index_L60_JPL.txt
+DIRECTORY	~/data.dir/mascons.dir/JPL.dir/JPL_MASCON_mask/jpl_shfted_mask.dir/MSCNS
 PROC	JPL
 DREL		RL06	
 DSET		GSM	
@@ -45,7 +32,6 @@ REDISTRIBUTE_REMOVED		N
 RECONSTRUCT		N	
 DESTRIPE		Y	
 MEAN_FILE		None
-#PARAMETERS FOR COMPARISON
 JPL_INPUT   ~/data.dir/mascons.dir/JPL.dir/RL06M.dir/CRI/GRCTellus.JPL.200204_202102.GLO.RL06M.MSCNv02CRI.nc
 JPL_MSCNS   ~/data.dir/mascons.dir/JPL.dir/JPL_MASCON_mask/jpl_shfted_mask.dir/JPL_MSCN_3deg_grid.shp 
 #JPL_MSCNS	~/data.dir/mascons.dir/JPL.dir/RL06M.dir/CRI/JPL_MSCNv02_PLACEMENT.nc 
@@ -53,8 +39,5 @@ JPL_LANDMASK	~/data.dir/mascons.dir/JPL.dir/RL06M.dir/CRI/LAND_MASK.CRI.nc
 JPL_SCALE	~/data.dir/mascons.dir/JPL.dir/RL06M.dir/CRI/CLM4.SCALE_FACTOR.JPL.MSCNv02CRI.nc 
 GSFC_INPUT  ~/data.dir/mascons.dir/Goddard.dir/gsfc.glb_.200204_202009_rl06v1.0_obp-ice6gd.h5
 #GSFC_INPUT  ~/data.dir/mascons.dir/Goddard.dir/GSFC.glb.200301_201607_v02.4-ICE6G.hdf
-GSFC_MSCNS  ~/data.dir/mascons.dir/Goddard.dir/mascon_grid.dir/goddard_1degree_mascon_grid.shp 
-RGI_DIR ~/data.dir/RGI
-LAT_LIMITS  50,67 	#50,71
-LON_LIMITS  -152,-122	#-161.5,-121
+GSFC_MSCNS  ~/data.dir/mascons.dir/Goddard.dir/mascon_grid.dir/goddard_1degree_mascon_grid.shp
 CLOBBER	N
