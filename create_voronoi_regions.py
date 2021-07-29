@@ -9,82 +9,25 @@ self-adjusting non-uniform voronoi regions around them.
 Save voronoi regions as scipy SphericalVoronoi objects
 and save an interactive html figure of the regions
 
-Last Update: 12/2020
+Last Update: 07/2021
 """
 import os
 import sys
 import copy
 import pickle
+import random
 import numpy as np
 import pandas as pd
-import geopandas as gpd
-import plotly.graph_objs as go
-from scipy.spatial import SphericalVoronoi,geometric_slerp
+from scipy.spatial import SphericalVoronoi
 import astropy.coordinates as ac
 from scipy.spatial.transform import Rotation as R
+from plot_configuration_html import plot_html
 #-- import pygplates (https://www.gplates.org/docs/pygplates/pygplates_getting_started.html#installation)
 import pygplates
 
 #-- configurations for unit sphere on which voronoi regions are constucted
 r = 1 
 origin = [0,0,0]
-
-
-#------------------------------------------------------------------------------
-#-- create plot
-#------------------------------------------------------------------------------
-def plot_html(new_centroids,new_sv,ind,outfile=''):
-	#-- initialize list to be plotted	
-	data = []
-	
-	#-- ploy polygons
-	for region in new_sv.regions:
-		n = len(region)
-		t = np.linspace(0,1,50)
-		poly_xy = np.zeros((n,3))
-		for i in range(n):
-			poly_xy[i] = new_sv.vertices[region][i]
-		polys = go.Mesh3d(x=poly_xy[:,0], y=poly_xy[:,1], z=poly_xy[:,2], opacity=1.0)	
-		data.append(polys)
-
-	#-- plot generators
-	gens = go.Scatter3d(x=new_centroids[:, 0],y=new_centroids[:, 1],z=new_centroids[:, 2],mode='markers',marker={'size': 3,'opacity': 1.0,'color': 'black'},name='Generator Points')
-	fixed = [None]*len(ind)
-	for i in range(len(ind)):
-		fixed[i] = go.Scatter3d(x=[new_centroids[ind[i], 0]],y=[new_centroids[ind[i], 1]],z=[new_centroids[ind[i], 2]],mode='markers',\
-			marker={'size': 5,'opacity': 1.0,'color': 'red'},name='Fixed Point {0:d}'.format(i))
-
-	data += [gens] + fixed
-
-	#-- also plot world map
-	world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
-	for i in range(len(world)):
-		if world['geometry'][i].geom_type == 'MultiPolygon':
-			for j in range(len(world['geometry'][i])):
-				lons,lats = world['geometry'][i][j].exterior.coords.xy
-				#-- make line on sphere
-				pl = pygplates.PolylineOnSphere(list(zip(lats,lons)))
-				xyz = pl.to_xyz_array()
-				cline = go.Scatter3d(x=xyz[:,0],y=xyz[:,1],z=xyz[:,2],mode='lines',line={'width': 6,'color': 'darkgreen'},name='Land',showlegend=False)
-				data.append(cline)
-		else:
-			lons,lats = world['geometry'][i].exterior.coords.xy
-			#-- make line on sphere
-			pl = pygplates.PolylineOnSphere(list(zip(lats,lons)))
-			xyz = pl.to_xyz_array()
-			cline = go.Scatter3d(x=xyz[:,0],y=xyz[:,1],z=xyz[:,2],mode='lines',line={'width': 6,'color': 'darkgreen'},name='Land',showlegend=False)
-			data.append(cline)
-
-	#-- configure layout
-	layout = go.Layout(margin={'l': 0, 'r': 0, 'b': 0, 't': 0})
-
-	fig = go.Figure(data=data, layout=layout)
-	
-	#-- remove axes
-	fig.update_scenes(xaxis_visible=False, yaxis_visible=False, zaxis_visible=False)
-
-	#-- save to file
-	fig.write_html(outfile)
 
 
 #------------------------------------------------------------------------------
@@ -214,6 +157,10 @@ def calc_regions(parameters):
 	#---------------------------------------------------------------
 	#-- plot the initial configuration and save to html
 	#---------------------------------------------------------------
+	# make color map
+	random.seed(1)
+	rcol = lambda: random.randint(0,255)
+	colors = ['#%02X%02X%02X' % (rcol(), rcol(), rcol()) for i in range(len(sv.regions))]
 	if rotate:
 		# first shift back to true lat/lon before plotting
 		ry_recover = R.from_euler('y', 90-lat0_orig, degrees=True)
@@ -231,11 +178,15 @@ def calc_regions(parameters):
 		# make regions in true lat/lon
 		sv_latlon = SphericalVoronoi(true_centroids, r, origin)
 		sv_latlon.sort_vertices_of_regions()
-		plot_html(true_centroids, sv_latlon, ind, \
+		plot_html(true_centroids, sv_latlon, ind, colors=colors, \
 			outfile=os.path.join(ddir,'spherical_voronoi_regions_0.html'))
 	else:
-		plot_html(centroids, sv, ind, \
+		plot_html(centroids, sv, ind, colors=colors, \
 			outfile=os.path.join(ddir,'spherical_voronoi_regions_0.html'))
+
+	# also save initial configuration to file
+	with open(os.path.join(ddir,'sv_obj_0'), 'wb') as out_file:
+		pickle.dump(sv, out_file)
 
 	#---------------------------------------------------------------
 	# use the great circle distance between a given centroid and a
@@ -295,7 +246,8 @@ def calc_regions(parameters):
 	#---------------------------------------------------------------
 	#-- plot the final configuration and save to html
 	#---------------------------------------------------------------
-	plot_html(new_centroids,new_sv,ind,outfile=os.path.join(ddir,'spherical_voronoi_regions.html'))
+	plot_html(new_centroids, new_sv, ind, colors=colors, \
+		outfile=os.path.join(ddir,'spherical_voronoi_regions.html'))
 
 	#---------------------------------------------------------------
 	#-- Finally, save spherical voronoi object to file

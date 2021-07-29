@@ -5,16 +5,17 @@ by Yara Mohajerani
 
 Plot the output of create_voronoi_regions
 
-Last Update: 12/2020
+Last Update: 07/2021
 """
 import os
 import sys
 import pickle
+import random
 import numpy as np
 import pandas as pd
-import geopandas as gpd
-import plotly.graph_objs as go
-from scipy.spatial import geometric_slerp
+import astropy.coordinates as ac
+from scipy.spatial.transform import Rotation as R
+from plot_configuration_html import plot_html
 #-- import pygplates (https://www.gplates.org/docs/pygplates/pygplates_getting_started.html#installation)
 import pygplates
 
@@ -22,89 +23,100 @@ import pygplates
 r = 1 
 origin = [0,0,0]
 
-#------------------------------------------------------------------------------
-#-- create plot
-#------------------------------------------------------------------------------
-def plot_html(new_centroids,new_sv,ind,ddir):
-	#-- plot generators
-	gens = go.Scatter3d(x=new_centroids[:, 0],y=new_centroids[:, 1],z=new_centroids[:, 2],mode='markers',marker={'size': 3,'opacity': 0.8,'color': 'blue'},name='Generator Points')
-	fixed = [None]*len(ind)
-	for i in range(len(ind)):
-		fixed[i] = go.Scatter3d(x=[new_centroids[ind[i], 0]],y=[new_centroids[ind[i], 1]],z=[new_centroids[ind[i], 2]],mode='markers',\
-			marker={'size': 5,'opacity': 0.8,'color': 'red'},name='Fixed Point {0:d}'.format(i))
-
-	data = [gens] + fixed
-
-	for region in new_sv.regions:
-		n = len(region)
-		t = np.linspace(0,1,50)
-		for i in range(n):
-			start = new_sv.vertices[region][i]
-			end = new_sv.vertices[region][(i + 1) % n]
-			result = np.array(geometric_slerp(start, end, t))
-			edge = go.Scatter3d(x=result[..., 0],y=result[..., 1],z=result[..., 2],mode='lines',line={'width': 1,'color': 'black'},name='region edge',showlegend=False)
-			data.append(edge)
-
-	#-- also plot world map
-	world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
-	for i in range(len(world)):
-		if world['geometry'][i].geom_type == 'MultiPolygon':
-			for j in range(len(world['geometry'][i])):
-				lons,lats = world['geometry'][i][j].exterior.coords.xy
-				#-- make line on sphere
-				pl = pygplates.PolylineOnSphere(list(zip(lats,lons)))
-				xyz = pl.to_xyz_array()
-				cline = go.Scatter3d(x=xyz[:,0],y=xyz[:,1],z=xyz[:,2],mode='lines',line={'width': 3,'color': 'green'},name='Land',showlegend=False)
-				data.append(cline)
-		else:
-			lons,lats = world['geometry'][i].exterior.coords.xy
-			#-- make line on sphere
-			pl = pygplates.PolylineOnSphere(list(zip(lats,lons)))
-			xyz = pl.to_xyz_array()
-			cline = go.Scatter3d(x=xyz[:,0],y=xyz[:,1],z=xyz[:,2],mode='lines',line={'width': 3,'color': 'green'},name='Land',showlegend=False)
-			data.append(cline)
-
-	#-- configure layout
-	layout = go.Layout(margin={'l': 0, 'r': 0, 'b': 0, 't': 0},title={
-			'text': "Final Generator Setup",
-			'y':0.9,
-			'x':0.5,
-			'xanchor': 'center',
-			'yanchor': 'top'})
-
-	fig = go.Figure(data=data, layout=layout)
-	
-	#-- remove axes
-	fig.update_scenes(xaxis_visible=False, yaxis_visible=False, zaxis_visible=False)
-	#-- save to file
-	fig.write_html(os.path.join(ddir,'spherical_voronoi_regions.html'))
-
 
 #------------------------------------------------------------------------------
 #-- calculate voronoi regions based on given fixed points
 #------------------------------------------------------------------------------
 def calc_regions(parameters):
 	#---------------------------------------------------------------
-	# Set up initial generator grid
+	# Read configuration to plot
 	#---------------------------------------------------------------
 	input_file = os.path.expanduser(parameters['VORONOI_FILE'])
 	with open(input_file, 'rb') as in_file:
 		sv = pickle.load(in_file)
+
+	#---------------------------------------------------------------
+	# Set up initial generator grid to get fixed point indices
+	#---------------------------------------------------------------
+	rotate = True if parameters['ROTATE'].upper() in ['TRUE','Y'] else False
+	print('Rotate:', rotate)
 	#-- read fixed-point coordinates
 	coord_file = os.path.expanduser(parameters['COORD_FILE'])
 	ddir = os.path.dirname(coord_file)
 	df = pd.read_csv(coord_file)
-	lons = np.array(df['LONS'])
-	lats = np.array(df['LATS'])
+	if rotate:
+		lons_orig = np.array(df['LONS'])
+		lats_orig = np.array(df['LATS'])
+		#-- get reference point coordinates for calcuting distances to reference point
+		lat0_orig = np.mean(lats_orig)
+		lon0_orig = np.mean(lons_orig)
+
+		# make rotation matrices to rotate fixed point to North Pole
+		ry = R.from_euler('y',  -(90-lat0_orig), degrees=True)
+		rz = R.from_euler('z', -lon0_orig, degrees=True)
+
+		# make a Cartesian vector fo fixed points and rotate to new frame
+		n_fixed = len(lons_orig)
+		lats = [None]*n_fixed
+		lons = [None]*n_fixed
+		for i in range(n_fixed):
+			xyz = ac.spherical_to_cartesian(1,np.radians(lats_orig[i]),np.radians(lons_orig[i]))
+			v = [k.value for k in xyz]
+			#-- rotate coordinates and get new fixed point
+			rot_xyz = ry.apply(rz.apply(v))
+			rot_latlon = ac.cartesian_to_spherical(rot_xyz[0], rot_xyz[1], rot_xyz[2])
+			lats[i] = np.degrees(rot_latlon[1].value)
+			lons[i] = np.degrees(rot_latlon[2].value)
+		lats = np.array(lats)
+		lons = np.array(lons)
+
+		#-- refernce points after rotation
+		lat0 = np.mean(lats)
+		lon0 = np.mean(lons)
+		print(f'Original lon {lon0_orig} lat {lat0_orig}. Transfomed lon {lon0:.2f} lat {lat0:.2f}.')
+	else:
+		# read fixed points
+		lons = np.array(df['LONS'])
+		lats = np.array(df['LATS'])
+		# reference point
+		lat0 = np.mean(lats)
+		lon0 = np.mean(lons)
+
+	#-- get grid interval
 	eps = float(parameters['EPSILON'])
+
 	#-- colatitude and longtiude lists in radians
 	phis = np.radians(90-lats)
 	thetas = np.radians(lons)
-	#-- fill the rest of the coordinates (initial generators)
-	phi_list = np.concatenate([phis,np.arange(eps,np.min(phis),eps),np.arange(np.max(phis)+eps,np.pi,eps)])
-	theta_list = np.concatenate([thetas,np.arange(eps,np.min(thetas),eps),np.arange(np.max(thetas)+eps,2*np.pi,eps)])
-	a1,a2 = np.meshgrid(phi_list,theta_list)
-	points = np.array([[r*np.sin(phi)*np.cos(theta),r*np.sin(phi)*np.sin(theta),r*np.cos(phi)] for phi,theta in zip(a1.flatten(),a2.flatten())])
+	# change to -180 to 180 range.
+	if (thetas > np.pi).any():
+		thetas -= 2*np.pi
+	if rotate:
+		#-- fill the rest of the coordinates (initial generators)
+		theta_list = np.concatenate( [thetas, \
+			np.arange(-np.pi, np.min(thetas),eps),\
+			np.arange(np.max(thetas)+eps, np.pi, eps)])
+		if len(lons)==1:
+			print('Only 1 given fixed point')
+			phi_list = np.arange(np.max(phis)+eps, np.pi, eps)
+			a1,a2 = np.meshgrid(phi_list,theta_list)
+			a1 = np.concatenate(( phis, a1.flatten() ))
+			a2 = np.concatenate(( thetas, a2.flatten() ))
+		else:
+			print('Multiple fixed points.')
+			phi_list = np.concatenate([phis, np.arange(np.max(phis)+eps, np.pi, eps) ] )
+			a1,a2 = np.meshgrid(phi_list,theta_list)
+			a1 = a1.flatten()
+			a2 = a2.flatten()
+	else:
+		phi_list = np.concatenate([phis,np.arange(eps,np.min(phis),eps),np.arange(np.max(phis)+eps,np.pi,eps)])
+		theta_list = np.concatenate([thetas,np.arange(eps,np.min(thetas),eps),np.arange(np.max(thetas)+eps,2*np.pi,eps)])
+		a1,a2 = np.meshgrid(phi_list,theta_list)
+		a1 = a1.flatten()
+		a2 = a2.flatten()
+
+	# points = np.array([[k.value for k in ac.spherical_to_cartesian(1,phi,theta)] for phi,theta in zip(a1,a2)])
+	points = np.array([[r*np.sin(phi)*np.cos(theta),r*np.sin(phi)*np.sin(theta),r*np.cos(phi)] for phi,theta in zip(a1,a2)])
 	print('Epsilon: {0:.2f}, Number of Points: {1:d}'.format(eps,len(points)))
 
 	#-- keep track of the index of the fixed points
@@ -130,7 +142,12 @@ def calc_regions(parameters):
 	#---------------------------------------------------------------
 	#-- plot the final configuration and save to html
 	#---------------------------------------------------------------
-	plot_html(centroids,sv,ind,ddir)
+	# make color map
+	random.seed(1)
+	rcol = lambda: random.randint(0,255)
+	colors = ['#%02X%02X%02X' % (rcol(), rcol(), rcol()) for i in range(len(sv.regions))]
+	plot_html(centroids, sv, ind, colors=colors, outfile=os.path.join(ddir,\
+		f'{os.path.basename(input_file)}_spherical_voronoi_regions.html'))
 
 #------------------------------------------------------------------------------
 #-- main function
