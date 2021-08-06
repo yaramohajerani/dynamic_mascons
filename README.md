@@ -110,4 +110,4 @@ The command-line pipeline for running this procedure for any user-defined point(
 
 # License
 The code presented in this repository is under the [MIT license](./LICENSE).
-Copyright &copy; 2020 Yara Mohajerani
+Copyright &copy; 2021 Yara Mohajerani
