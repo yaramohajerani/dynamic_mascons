@@ -18,19 +18,19 @@ This draws on previous work on regional 2-dimensional automated variable-size ma
 
 <img src="./imgs/sample_antarctica.gif" width="300"/>
 
-However, extending this to a global framework requires a 3D geodetic grid with no distortion. The present pipeline addresses this gap and allows for any user-defined set up local points to be transformed to a global mascon configuration for processing of GRACE and GRACE Follow-On harmonic data.
+However, extending this to a global framework requires a 3D grid with no distortion on the surface of the Earth The present pipeline addresses this gap and allows for any user-defined set up local points to be transformed to a global mascon configuration for processing of GRACE and GRACE Follow-On harmonic data.
 
-In the first notebook, `spherical_voronoi.ipynb`, I go through the steps of constructing a spherical voronoi tessellation with a set of fixed points. I choose two points on the Karakoram region in High Mountain Asia as our fixed points. 
+In the first example notebook, `spherical_voronoi.ipynb`, I go through the steps of constructing a spherical voronoi tessellation with a set of fixed points. I choose two points on the Karakoram region in High Mountain Asia as our fixed points. 
 [![nbviewer](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](https://nbviewer.jupyter.org/github/yaramohajerani/dynamic_mascons/blob/main/spherical_voronoi.ipynb)
 
-In the second notebook, the resulting final configuration is used to construct a harmonic mascon representation, which is then used to calculate the sensitivity kernel of the mascons resulting from the inversion (refer to [Jacob et al. 2011](http://doi.org/10.1007/s00190-011-0522-7)). The resulting kernel for the fixed points is localized and has minimal leakage. This is in contrast to many configurations with regional coverage that are prone to divergence of the kernel at the boundaries of the domain, which illustrates the effectiveness of this method. While spherical caps have traditionally been used to create regional mascons (e.g. [Mohajerani et al. 2019](https://doi.org/10.1029/2019GL084665)) in order to minimze sharp edges and vertices that would rely on higher-degree harmonics, we find that directly using the voronoi polygons does not produce unacceptable leakage or noise, but instead allows us to create more flexible non-uniform global configurations. Finally, we fit the spherical harmonic data from GRACE and GRACE Follow-On satellites to these mascons to isolate the mass-balance sampled by the fixed points on the Karakorm.
+In the second example notebook, the resulting final configuration is used to construct a harmonic mascon representation, which is then used to calculate the sensitivity kernel of the mascons resulting from the inversion (refer to [Jacob et al. 2011](http://doi.org/10.1007/s00190-011-0522-7)). The resulting kernel for the fixed points is localized and has minimal leakage. This is in contrast to many configurations with regional coverage that are prone to divergence of the kernel at the boundaries of the domain, which illustrates the effectiveness of this method. While spherical caps have traditionally been used to create regional mascons (e.g. [Mohajerani et al. 2019](https://doi.org/10.1029/2019GL084665)) in order to minimze sharp edges and vertices that would rely on higher-degree harmonics, we find that directly using the voronoi polygons does not produce unacceptable leakage or noise, but instead allows us to create more flexible non-uniform global configurations. Finally, we fit the spherical harmonic data from GRACE and GRACE Follow-On satellites to these mascons to isolate the mass-balance sampled by the fixed points on the Karakorm.
 [![nbviewer](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](https://nbviewer.jupyter.org/github/yaramohajerani/dynamic_mascons/blob/main/voronoi_to_mascon.ipynb)
 
 # Pipeline Steps
 The command-line pipeline for running this procedure for any user-defined point(s) is described below:
 
 1. Get depedencies:
-   * Install dependencies developed by [Tyler Sutterley](https://github.com/tsutterley) as part of the [read-GRACE-harmonics]() toolkit:
+   * Install dependencies developed by [Tyler Sutterley](https://github.com/tsutterley) as part of the [read-GRACE-harmonics](https://github.com/tsutterley/read-GRACE-harmonics) toolkit:
       ```
       python3 -m pip install --user git+https://github.com/tsutterley/read-GRACE-harmonics.git
       ```
@@ -51,7 +51,7 @@ The command-line pipeline for running this procedure for any user-defined point(
     ```
 	python create_voronoi_regions.py parameters_voronoi_mascons.txt 
 	```
-	Note the `epsilon` parameter in the parameter file is the increment (in radians) used in the initial grid of generators used to create voronoi regions. `iterations` is the number of iterations, and `ratio` is the scaling factor for shifting centroids towards the fixed points in every iteration (inversely proportional to distance).
+	Note the `EPSILON` parameter in the parameter file is the increment (in radians) used in the initial grid of generators used to create voronoi regions. `N_ITERATIONS` is the number of iterations, and `R_CONSTANT` is the scaling factor for shifting centroids towards the fixed points in every iteration (inversely proportional to distance). Finally, if `ROTATE` is set to `True`, the coordinate system is rotated such that the mean of the fixed points is situated at the North Pole to maximze azimuthal symmetry. 
 
 	This script will save the final voronoi regions into file for later use, and also save an [interactive plot of the voronoi regions.](./imgs/spherical_voronoi_regions.html)
 	![](./imgs/voronoi_regions.png)
