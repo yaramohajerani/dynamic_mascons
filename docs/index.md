@@ -4,9 +4,9 @@ This repository presents a novel automated methodology for creating dynamic glob
 
 Click the image below for an interactive dynamic global configurations for the Karakoram region in High Mountain Asia:
 
-<a href="/karakoram_config.html">
-<img src="/tessellations_karakoram.png" alt="Karakoram Configuration" width="100" height="132">
-</a>
+<p><a href="karakoram_config.html">
+<img src="tessellations_karakoram.png" alt="Karakoram Configuration">
+</a></p>
 
 The associated publication can be found at
 
