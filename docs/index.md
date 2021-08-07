@@ -32,7 +32,7 @@ While past work has focused on regionally optimizied mascon processing (e.g. [Mo
 
 This draws on previous work on regional 2-dimensional automated variable-size mascon design that I developed for Antarctica:
 
-<img src="./imgs/sample_antarctica.gif" width="300"/>
+<img src="./imgs/sample_antarctica.gif" width="600"/>
 
 However, extending this to a global framework requires a 3D geodetic grid with no distortion. The present pipeline addresses this gap and allows for any user-defined set up local points to be transformed to a global mascon configuration for processing of GRACE and GRACE Follow-On harmonic data.
 
