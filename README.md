@@ -2,7 +2,7 @@ Automated Dynamic Mascon Generation for GRACE and GRACE-FO Harmonic Processing
 ====================
 [![DOI](https://zenodo.org/badge/309498800.svg)](https://zenodo.org/badge/latestdoi/309498800)
 [![Website shields.io](https://img.shields.io/website-up-down-green-red/http/shields.io.svg)](https://yaramohajerani.github.io/dynamic_mascons/)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/yaramohajerani/FrontLearning/blob/master/LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/yaramohajerani/dynamic_mascons/blob/main/LICENSE)
 [![Language](https://img.shields.io/badge/python-v3.7-green.svg)](https://www.python.org/)
 [![nbviewer](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](https://nbviewer.jupyter.org/github/yaramohajerani/dynamic_mascons/blob/main/spherical_voronoi.ipynb)
 [![nbviewer](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](https://nbviewer.jupyter.org/github/yaramohajerani/dynamic_mascons/blob/main/voronoi_to_mascon.ipynb)
