@@ -1,13 +1,14 @@
 # Automated Dynamic Mascon Generation for GRACE and GRACE-FO Harmonic Processing
 
 [![DOI](https://zenodo.org/badge/309498800.svg)](https://zenodo.org/badge/latestdoi/309498800)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/yaramohajerani/FrontLearning/blob/master/LICENSE)
+[![Website shields.io](https://img.shields.io/website-up-down-green-red/http/shields.io.svg)](https://yaramohajerani.github.io/dynamic_mascons/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/yaramohajerani/dynamic_mascons/blob/main/LICENSE)
 [![Language](https://img.shields.io/badge/python-v3.7-green.svg)](https://www.python.org/)
 
 
-This repository and the [associated publication](https://www.mdpi.com/2072-4292/13/16/3134) presents a novel automated methodology for creating dynamic global mascons using iterative spherical Voronoi tessellations for the processing of [GRACE](https://grace.jpl.nasa.gov) (Gravity Recovery and Climate Experiment) and [GRACE-FO](https://gracefo.jpl.nasa.gov) (Follow-On) harmonics.
+This repository and the [associated publication](https://www.mdpi.com/2072-4292/13/16/3134) present a novel automated methodology for creating dynamic global mascons using iterative spherical Voronoi tessellations for the processing of [GRACE](https://grace.jpl.nasa.gov) (Gravity Recovery and Climate Experiment) and [GRACE-FO](https://gracefo.jpl.nasa.gov) (Follow-On) harmonics.
 
-Click the image below for an interactive dynamic global configurations for the Karakoram region in High Mountain Asia:
+Click the image below for an interactive dynamic global configuration for the Karakoram region in High Mountain Asia:
 
 <p><a href="karakoram_config.html">
 <img src="tessellations_karakoram.png" alt="Karakoram Configuration">
